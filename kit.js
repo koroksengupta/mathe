@@ -12,10 +12,10 @@
   /* ---------- Language (shared with Island Hopper via the same key) ---------- */
   let lang = store.get('ih-lang', 'en');
   if (lang !== 'en' && lang !== 'de') lang = 'en';
-  const FLAGS = { en: '🇬🇧 EN', de: '🇩🇪 DE' };
+  const FLAGS = { en: '<span>🇬🇧</span><span class="code">EN</span>', de: '<span>🇩🇪</span><span class="code">DE</span>' };
   const langButtons = [];
   function renderLangButtons() {
-    langButtons.forEach(b => { b.textContent = FLAGS[lang]; });
+    langButtons.forEach(b => { b.innerHTML = FLAGS[lang]; });
     document.documentElement.lang = lang;
   }
   function bindLangButton(btn, onChange) {
@@ -123,9 +123,11 @@
       const resize = () => { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; };
       addEventListener('resize', resize); resize();
     }
-    // origins: [{x, y, ang, spread, speed}] in CSS pixels; ang in radians (−π/2 = straight up)
-    function burst({ count = 90, origins, colors = COLORS, emoji = EMOJI, round = false, gravity = 0.25 } = {}) {
+    // origins: [{x, y, ang, spread, speed}] in CSS pixels; ang in radians (−π/2 = straight up).
+    // A new burst replaces the old one by default, so quick wins never pile confetti on the screen.
+    function burst({ count = 40, origins, colors = COLORS, emoji = EMOJI, round = false, gravity = 0.3, replace = true } = {}) {
       ensure();
+      if (replace) parts = [];
       const W = innerWidth, H = innerHeight;
       origins = origins || [
         { x: W * 0.15, y: H, ang: -Math.PI / 2 + 0.35, spread: 1.1, speed: 11 },
@@ -141,7 +143,7 @@
             r: 5 + Math.random() * 7, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
             color: colors[(Math.random() * colors.length) | 0], round,
             emoji: emoji && Math.random() < 0.12 ? emoji[(Math.random() * emoji.length) | 0] : null,
-            life: 0, max: 150 + Math.random() * 80
+            life: 0, max: 60 + Math.random() * 35
           });
         }
       }
@@ -170,7 +172,7 @@
 
   /* ---------- Big celebration: flash, giant text, confetti, fanfare ---------- */
   let flashEl = null, yayEl = null;
-  function celebrate({ text, say, perfect = false, confettiMult = 1 } = {}) {
+  function celebrate({ text, say, perfect = false, confettiMult = 1, keepConfetti = false } = {}) {
     if (!flashEl) {
       flashEl = document.createElement('div'); flashEl.className = 'kit-flash';
       yayEl = document.createElement('div'); yayEl.className = 'kit-yay';
@@ -180,7 +182,7 @@
     restart(yayEl, 'show');
     restart(flashEl, 'on');
     sfx.win(); if (perfect) sfx.perfect();
-    confetti.burst({ count: Math.round(90 * confettiMult) });
+    confetti.burst({ count: Math.round(40 * confettiMult), replace: !keepConfetti });
     speak(say);
   }
 
@@ -204,8 +206,8 @@
   }
 
   /* ---------- Level screen tiles ---------- */
-  // levels: [{icon, chips:[{t, cls}]}], got: stars array
-  function levelTiles(el, levels, got, current, onStart) {
+  // levels: [{icon, chips:[{t, cls}]}], got: stars array, done: finished levels (🏆)
+  function levelTiles(el, levels, got, current, onStart, done = []) {
     el.innerHTML = '';
     levels.forEach((lv, i) => {
       const b = document.createElement('button');
@@ -213,10 +215,64 @@
       b.setAttribute('aria-label', 'Level ' + (i + 1));
       b.innerHTML = `<span class="ico">${lv.icon}</span>` +
         `<span class="chips">${lv.chips.map(c => `<span class="chip ${c.cls || ''}">${c.t}</span>`).join('')}</span>` +
-        `<span class="got">⭐ ${got[i]}</span>`;
+        `<span class="got">⭐ ${got[i]}</span>` + (done[i] ? '<span class="trophy">🏆</span>' : '');
       b.addEventListener('click', () => { audio(); onStart(i); });
       el.appendChild(b);
     });
+  }
+
+
+  /* ---------- Level progress: 5 clean wins (first try, no hint) finish a level ---------- */
+  const GOAL = 5;
+  function progress(key, levels) {
+    const p = store.json(key, {});
+    const pad = a => Array.from({ length: levels }, (_, i) => (a && a[i]) || 0);
+    return { count: pad(p.c), done: pad(p.d).map(Boolean) };
+  }
+  // Records a clean win; returns true exactly when this win finishes the level.
+  function addClean(key, levels, level) {
+    const p = progress(key, levels);
+    if (p.done[level]) return false;
+    p.count[level] = Math.min(GOAL, p.count[level] + 1);
+    const finished = p.count[level] >= GOAL;
+    if (finished) p.done[level] = true;
+    store.set(key, JSON.stringify({ c: p.count, d: p.done.map(Number) }));
+    return finished;
+  }
+  function renderProgress(el, key, levels, level) {
+    const p = progress(key, levels);
+    if (p.done[level]) { el.innerHTML = '<span class="slot on">🏆</span>'; return; }
+    el.innerHTML = Array.from({ length: GOAL }, (_, i) =>
+      `<span class="slot ${i < p.count[level] ? 'on' : ''}">${i < p.count[level] ? '⭐' : '☆'}</span>`).join('');
+  }
+
+  const LEVEL_TEXT = {
+    en: { up: 'LEVEL UP!', upSay: 'Level up! You are ready for the next level!', champ: 'CHAMPION!', champSay: 'Wow! You finished every level!' },
+    de: { up: 'NÄCHSTES LEVEL!', upSay: 'Super! Du bist bereit für das nächste Level!', champ: 'CHAMPION!', champSay: 'Wow! Du hast alle Level geschafft!' }
+  };
+  let upEl = null;
+  // Big trophy screen: ▶ goes to the next level, 🔁 stays, 🗺️ (last level) goes to the map.
+  function levelUp({ nextIcon, last = false, onNext, onStay }) {
+    if (!upEl) {
+      upEl = document.createElement('div');
+      upEl.className = 'kit-levelup';
+      document.body.appendChild(upEl);
+    }
+    const T = LEVEL_TEXT[lang];
+    upEl.innerHTML =
+      `<div class="card"><div class="cup">🏆</div><div class="title">${last ? T.champ : T.up}</div>` +
+      (last ? '' : `<div class="next">➡ <span>${nextIcon}</span></div>`) +
+      `<div class="actions">` +
+      (last ? `<a class="go" href="index.html" aria-label="Map">🗺️</a>` : `<button class="go" aria-label="Next level">▶</button>`) +
+      `<button class="stay" aria-label="Stay">🔁</button></div></div>`;
+    upEl.classList.add('show');
+    sfx.win(); sfx.perfect();
+    confetti.burst({ count: 60 });
+    speak(last ? T.champSay : T.upSay);
+    const close = () => upEl.classList.remove('show');
+    const go = upEl.querySelector('button.go');
+    if (go) go.addEventListener('click', () => { audio(); close(); onNext && onNext(); });
+    upEl.querySelector('.stay').addEventListener('click', () => { audio(); close(); onStay && onStay(); });
   }
 
   window.Kit = {
@@ -224,6 +280,7 @@
     audio, sfx, speak, hush,
     restart, pick, rand,
     stars, addStars,
-    confetti, celebrate, numberPad, levelTiles
+    confetti, celebrate, numberPad, levelTiles,
+    GOAL, progress, addClean, renderProgress, levelUp
   };
 })();

@@ -65,7 +65,7 @@
 
 <div class="screen" id="start">
   <a class="pill corner" href="index.html" aria-label="Map">🗺️</a>
-  <button class="pill corner-r" id="langBtn0" aria-label="Language"></button>
+  <div class="corner-r" id="langSpotStart"></div>
   <h1 id="title">🌋 Volcano Tower</h1>
   <div class="levels" id="levels"></div>
 </div>
@@ -75,10 +75,11 @@
     <div class="side">
       <button class="pill" id="homeBtn" aria-label="Levels">🏠</button>
       <div class="pill stars" id="stars">⭐ 0</div>
+      <div class="pill progress" id="progress" aria-label="Level progress"></div>
     </div>
     <div class="side">
       <button class="pill" id="hintBtn" aria-label="Hint">💡</button>
-      <button class="pill" id="langBtn" aria-label="Language"></button>
+      <span id="langSpotGame"><button class="pill" id="langBtn" aria-label="Language"></button></span>
     </div>
   </div>
 
@@ -105,7 +106,7 @@
     { icon: '🌋', rows: 3, max: 10, mixed: true,  chips: [{ t: '+' }, { t: '−', cls: 'minus' }] },
     { icon: '🔥', rows: 4, max: 20, mixed: true,  chips: [{ t: '+' }, { t: '−', cls: 'minus' }, { t: '20', cls: 'range' }] }
   ];
-  const STAR_KEY = 'mathe-volcano-stars';
+  const STAR_KEY = 'mathe-volcano-stars', PROG_KEY = 'mathe-volcano-progress';
 
   const TEXT = {
     en: {
@@ -347,22 +348,34 @@
     const total = Kit.addStars(STAR_KEY, LEVELS.length, state.level, perfect ? 2 : 1);
     starsEl.textContent = `⭐ ${total}`;
     restart(starsEl, 'pop');
+    // Only clean walls (no mistakes, no hint) count towards finishing the level.
+    const levelDone = perfect && Kit.addClean(PROG_KEY, LEVELS.length, state.level);
+    renderProgress(perfect);
     sfx.rumble();
     restart(stage, 'quake');
     setTimeout(() => {
       if (session !== state.session) return;
       const roof = wallbox.querySelector('.roof').getBoundingClientRect();
       Kit.confetti.burst({
-        count: 170, round: true, emoji: null, gravity: 0.32,
+        count: 110, round: true, emoji: null, gravity: 0.34,
         colors: ['#FF4500', '#FF7A00', '#FFB000', '#FFD34D', '#D62700'],
         origins: [{ x: roof.left + roof.width / 2, y: roof.top + roof.height * 0.4, ang: -Math.PI / 2, spread: 0.9, speed: 12 }]
       });
       Kit.celebrate({
-        text: perfect ? L().perfect : L().yay, perfect,
+        text: perfect ? L().perfect : L().yay, perfect, keepConfetti: true,
         say: perfect ? L().perfectSay : Kit.pick(L().cheers)
       });
     }, 700);
-    setTimeout(() => { if (session === state.session) newWall(); }, 3700);
+    setTimeout(() => {
+      if (session !== state.session) return;
+      if (!levelDone) return newWall();
+      const last = state.level === LEVELS.length - 1;
+      Kit.levelUp({
+        last, nextIcon: last ? '' : LEVELS[state.level + 1].icon,
+        onNext: () => startLevel(state.level + 1),
+        onStay: () => { if (session === state.session) newWall(); }
+      });
+    }, 2500);
   }
 
   function newWall() {
@@ -378,11 +391,17 @@
 
   /* ---------- Screens ---------- */
   let pad = null;
+  function renderProgress(bump) {
+    Kit.renderProgress($('progress'), PROG_KEY, LEVELS.length, state.level);
+    if (bump) restart($('progress'), 'pop');
+  }
   function startLevel(i) {
     state.level = i; Kit.store.set('mathe-volcano-level', String(i));
     state.session++; state.rounds = 0; state.lastBottom = '';
     $('start').classList.add('hide');
     starsEl.textContent = `⭐ ${Kit.stars(STAR_KEY, LEVELS.length)[i]}`;
+    renderProgress(false);
+    $('langSpotGame').appendChild($('langBtn'));
     pad = Kit.numberPad($('pad'), LV().max, onPick);
     state.playing = true;
     sfx.ding();
@@ -393,7 +412,8 @@
     Kit.hush();
     $('title').textContent = L().title;
     document.title = L().title.replace('🌋 ', '');
-    Kit.levelTiles($('levels'), LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel);
+    Kit.levelTiles($('levels'), LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel, Kit.progress(PROG_KEY, LEVELS.length).done);
+    $('langSpotStart').appendChild($('langBtn'));   // one language button, moved between screens
     $('start').classList.remove('hide');
   }
 
@@ -404,8 +424,7 @@
     $('title').textContent = L().title;
     if (state.playing && !state.hintFor) bannerText.textContent = L().rule;
   };
-  Kit.bindLangButton($('langBtn'), onLang);
-  Kit.bindLangButton($('langBtn0'), () => { onLang(); showStart(); });
+  Kit.bindLangButton($('langBtn'), () => { onLang(); if (!state.playing) showStart(); });
   addEventListener('resize', () => { if (state.stones.length) layout(); });
 
   showStart();

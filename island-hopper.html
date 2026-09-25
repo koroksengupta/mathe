@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kit.css">
 <style>
   :root{
     --sky-top:#5EC8F2;
@@ -86,7 +87,7 @@
 
   /* ---------- Islands ---------- */
   .world{position:relative;z-index:3;width:100%;max-width:1400px;flex:1;display:flex;align-items:center;}
-  .islands{position:relative;width:100%;display:flex;justify-content:space-between;align-items:flex-end;margin-top:12vh;}
+  .islands{position:relative;width:100%;display:flex;justify-content:space-between;align-items:flex-end;margin-top:12vh;will-change:transform;}
   .island{position:relative;width:var(--island-w);display:flex;flex-direction:column;align-items:center;animation:bob 3.2s ease-in-out infinite;}
   .island:nth-child(odd){animation-delay:-1.6s;}
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -96,6 +97,11 @@
     box-shadow:inset 0 -4px 0 rgba(0,0,0,.12);position:relative;z-index:2;
   }
   .island.ten .top{background:radial-gradient(ellipse at 50% 25%,#B6F08E 0%,#3FB8A0 60%,#2A8F7C 100%);}
+  /* Zero gets its own look so children can spot where it went when the line slides. */
+  .island.zero .top{background:radial-gradient(ellipse at 50% 25%,#E9D8FF 0%,#A77BF3 55%,#7B4FD1 100%);}
+  .island.zero .num{background:#5B34B3;color:#fff;box-shadow:0 0 0 3px #fff,0 3px 0 rgba(0,0,0,.18);}
+  .island.neg .num{color:#B52A2D;}
+  .island .num.long{font-size:max(10px, calc(var(--island-w)*.3));}
   .island .rock{
     width:84%;aspect-ratio:1/.62;margin-top:-6%;
     background:linear-gradient(180deg,#D59A5E 0%,#A8703D 60%,#7E5129 100%);
@@ -200,31 +206,18 @@
   .btn:disabled{filter:grayscale(.5) brightness(.9);cursor:default;}
   .btn:focus-visible{outline:5px solid #fff;outline-offset:4px;}
 
-  /* ---------- Celebration ---------- */
-  #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20;}
-  .flash{position:fixed;inset:0;pointer-events:none;z-index:19;opacity:0;}
-  .flash.on{animation:flash 2.4s steps(1) forwards;}
-  @keyframes flash{
-    0%{opacity:.45;background:#FFE14D}10%{opacity:.4;background:#FF6FB5}20%{opacity:.45;background:#5EF08A}
-    30%{opacity:.4;background:#6FC8FF}40%{opacity:.45;background:#FFE14D}50%{opacity:.35;background:#C88BFF}
-    60%{opacity:.3;background:#FF6FB5}70%{opacity:.2;background:#5EF08A}80%{opacity:.12;background:#FFE14D}100%{opacity:0}
-  }
-  .yay{position:fixed;left:50%;top:38%;z-index:21;transform:translate(-50%,-50%) scale(0);pointer-events:none;
-    font-size:clamp(56px,13vw,180px);font-weight:700;color:#fff;white-space:nowrap;
-    text-shadow:0 6px 0 #F0A500,0 10px 25px rgba(0,0,0,.3);}
-  .yay.show{animation:yay 2.6s cubic-bezier(.2,1.6,.4,1) forwards;}
-  @keyframes yay{0%{transform:translate(-50%,-50%) scale(0) rotate(-20deg)}15%{transform:translate(-50%,-50%) scale(1.1) rotate(6deg)}25%{transform:translate(-50%,-50%) scale(1) rotate(-4deg)}80%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}}
+  /* ---------- Celebration (confetti, flash and big text come from kit.css) ---------- */
   body.shaking .world{animation:worldShake .5s ease 2;}
   @keyframes worldShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-6px,3px)}50%{transform:translate(6px,-3px)}75%{transform:translate(-4px,2px)}}
 
   /* ---------- Start screen ---------- */
   .start{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.6vh;padding:16px;
-    background:linear-gradient(180deg,rgba(94,200,242,.97),rgba(47,159,216,.98));overflow:auto;}
+    background:linear-gradient(180deg,#5EC8F2,#2F9FD8);overflow:auto;}
   .start h1{margin:0;font-size:clamp(40px,8vw,110px);color:#fff;text-shadow:0 6px 0 var(--sea-deep);letter-spacing:.02em;text-align:center;line-height:1;}
   .start .pals{display:flex;gap:clamp(6px,1.6vw,20px);flex-wrap:wrap;justify-content:center;}
   .start .pal{font-size:clamp(34px,6vw,72px);background:rgba(255,255,255,.35);border:4px solid transparent;border-radius:24px;padding:4px 12px;cursor:pointer;transition:transform .15s;}
   .start .pal.sel{border-color:#fff;background:rgba(255,255,255,.7);transform:scale(1.12);}
-  .levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(10px,2vw,24px);width:100%;max-width:1000px;}
+  .levels{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(10px,2vw,24px);width:100%;max-width:1150px;}
   .level{position:relative;border:none;border-radius:28px;cursor:pointer;padding:14px 8px 12px;
     background:#fff;box-shadow:0 9px 0 rgba(0,0,0,.18);display:flex;flex-direction:column;align-items:center;gap:6px;
     transition:transform .12s;color:var(--ink);}
@@ -236,11 +229,14 @@
   .level .got{font-size:clamp(15px,2vw,22px);font-weight:700;opacity:.8;}
   .level.last{outline:5px solid var(--gold);outline-offset:3px;}
   .start.hide{display:none;}
+  .start .corner-r{position:absolute;top:12px;right:16px;}
   .start .map{position:absolute;top:12px;left:16px;font-size:clamp(20px,3.2vw,34px);background:rgba(255,255,255,.88);border-radius:999px;padding:4px 16px;box-shadow:0 4px 0 rgba(0,0,0,.12);text-decoration:none;}
 
   @media (orientation:portrait) and (max-width:700px){
     .islands{margin-top:4vh;}
     .rotate-tip{display:block !important;}
+    .pill{font-size:18px;padding:3px 10px;}
+    .stars{min-width:0;}
     .levels{grid-template-columns:repeat(2,minmax(0,1fr));}
     .controls.many{flex-direction:column;gap:18px;}
     .controls.many .group{max-width:none;}
@@ -258,6 +254,7 @@
 
 <div class="start" id="start">
   <a class="map" href="index.html" aria-label="Map">🗺️</a>
+  <div class="corner-r" id="langSpotStart"></div>
   <h1>🏝️ Island Hopper</h1>
   <div class="pals" id="pals"></div>
   <div class="levels" id="levels"></div>
@@ -274,9 +271,10 @@
     <div class="left">
       <button class="pill" id="homeBtn" aria-label="Home">🏠</button>
       <div class="pill stars" id="stars">⭐ 0</div>
+      <div class="pill progress" id="progress" aria-label="Level progress"></div>
     </div>
     <div class="rotate-tip">📱↻</div>
-    <button class="pill" id="langBtn" aria-label="Language">🇬🇧 EN</button>
+    <span id="langSpotGame"><button class="pill" id="langBtn" aria-label="Language"></button></span>
   </div>
 
   <div class="banner" id="banner" role="status" aria-live="polite" title="Tap to hear again">
@@ -298,151 +296,86 @@
   <div class="controls" id="controls"></div>
 </div>
 
-<div class="flash" id="flash"></div>
-<div class="yay" id="yay">YAY! 🎉</div>
-<canvas id="confetti"></canvas>
 
+<script src="kit.js"></script>
 <script>
 (() => {
   'use strict';
+  const { speak, restart, store } = Kit;
 
   const PALS = ['🐸', '🦘', '🐰', '🐵', '🐱', '🦄'];
 
-  // Each level adds bigger jumps. From level 2 on, every round comes with a
-  // ⚡ jump budget, so the child has to plan (e.g. +3 +3 +1 instead of seven +1s).
+  // Each level adds bigger jumps. From level 2 on, every round comes with a ⚡ jump budget, and the
+  // visible part of the number line slides between rounds, so the child has to read the numbers first.
+  // Positions are numbers on the line (value), not island indexes: island i shows base + i.
   const LEVELS = [
-    { icon: '🌱', max: 10, steps: [1],       energy: false },
-    { icon: '🌊', max: 10, steps: [1, 2],    energy: true, minDist: 2, maxMoves: 3 },
-    { icon: '🌋', max: 10, steps: [1, 2, 3], energy: true, minDist: 3, maxMoves: 3 },
-    { icon: '🚀', max: 20, steps: [1, 2, 5], energy: true, minDist: 3, maxMoves: 4 }
+    { icon: '🌱', n: 11, steps: [1],       energy: false, base: [0, 0],   chips: [{ t: '+1' }] },
+    { icon: '🌊', n: 11, steps: [1, 2],    energy: true,  base: [0, 6],   minDist: 2, maxMoves: 3, chips: [{ t: '+1' }, { t: '+2' }, { t: '↔', cls: 'range' }] },
+    { icon: '🌋', n: 11, steps: [1, 2, 3], energy: true,  base: [0, 10],  minDist: 3, maxMoves: 3, chips: [{ t: '+1' }, { t: '+2' }, { t: '+3' }, { t: '↔', cls: 'range' }] },
+    { icon: '🚀', n: 21, steps: [1, 2, 5], energy: true,  base: [0, 10],  minDist: 3, maxMoves: 4, chips: [{ t: '+1' }, { t: '+2' }, { t: '+5' }, { t: '🏝️21', cls: 'range' }] },
+    { icon: '❄️', n: 11, steps: [1, 2, 3], energy: true,  base: [-10, 0], minDist: 3, maxMoves: 3, chips: [{ t: '+1' }, { t: '+2' }, { t: '+3' }, { t: '−10…10', cls: 'minus' }] }
   ];
+  const STAR_KEY = 'ih-stars', PROG_KEY = 'ih-progress';
 
+  const fmt = v => v < 0 ? '−' + (-v) : String(v);
+  const spoken = v => v < 0 ? `minus ${-v}` : String(v);
   const TEXT = {
     en: {
       ask: n => `Can you land on Island ${n}?`,
-      say: (n, e) => `Can you land on island ${n}?` + (e ? ` You have ${e} ${e === 1 ? 'jump' : 'jumps'}.` : ''),
+      say: (n, e) => `Can you land on island ${spoken(n)}?` + (e ? ` You have ${e} ${e === 1 ? 'jump' : 'jumps'}.` : ''),
       yay: 'YAY! 🎉', perfect: 'PERFECT! 🌟',
       cheers: ['Yay! You did it!', 'Super hop!', 'Wow! Amazing!', 'Hooray!'],
       perfectSay: 'Perfect! Double star!',
       oops: 'Oops!', splash: 'Splash! 🌊', tryAgain: 'Splash! Try again!',
-      boost: 'BOOST', blast: 'BLAST', voice: 'en', flag: '🇬🇧 EN'
+      boost: 'BOOST', blast: 'BLAST'
     },
     de: {
       ask: n => `Kannst du auf Insel ${n} landen?`,
-      say: (n, e) => `Kannst du auf Insel ${n} landen?` + (e ? ` Du hast ${e === 1 ? 'einen Sprung' : e + ' Sprünge'}.` : ''),
+      say: (n, e) => `Kannst du auf Insel ${spoken(n)} landen?` + (e ? ` Du hast ${e === 1 ? 'einen Sprung' : e + ' Sprünge'}.` : ''),
       yay: 'JUHU! 🎉', perfect: 'PERFEKT! 🌟',
       cheers: ['Juhu! Geschafft!', 'Super gehüpft!', 'Wow! Toll!', 'Hurra!'],
       perfectSay: 'Perfekt! Doppelstern!',
       oops: 'Hoppla!', splash: 'Platsch! 🌊', tryAgain: 'Platsch! Nochmal!',
-      boost: 'BOOST', blast: 'BLAST', voice: 'de', flag: '🇩🇪 DE'
+      boost: 'BOOST', blast: 'BLAST'
     }
   };
+  const L = () => TEXT[Kit.lang];
 
   const $ = id => document.getElementById(id);
   const gameEl = $('game'), islandsEl = $('islands'), arcsEl = $('arcs'), hero = $('hero'), heroBody = $('heroBody'), oopsEl = $('oops');
   const controlsEl = $('controls'), energyEl = $('energy');
-  const banner = $('banner'), bannerText = $('bannerText'), starsEl = $('stars');
-
-  function load(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
-  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  function loadStars() {
-    try { const a = JSON.parse(localStorage.getItem('ih-stars') || '[]'); return LEVELS.map((_, i) => +a[i] || 0); }
-    catch (e) { return LEVELS.map(() => 0); }
-  }
+  const banner = $('banner'), bannerText = $('bannerText'), starsEl = $('stars'), progressEl = $('progress');
 
   const state = {
-    level: Math.min(LEVELS.length - 1, Math.max(0, +load('ih-level', '0') || 0)),
-    pos: 0, target: -1, roundStart: 0,
-    energy: 0, energyMax: 0, minMoves: 0, moves: 0, streak: 0,
-    busy: false, celebrating: false, playing: false, session: 0,
+    level: Math.min(LEVELS.length - 1, Math.max(0, +store.get('ih-level', '0') || 0)),
+    base: 0, pos: 0, target: null, roundStart: 0,
+    energy: 0, energyMax: 0, minMoves: 0, moves: 0, streak: 0, splashed: false,
+    busy: false, celebrating: false, panning: false, playing: false, session: 0,
     arcs: [], buttons: [],
-    stars: loadStars(),
-    pal: load('ih-pal', PALS[0]), lang: load('ih-lang', 'en')
+    pal: store.get('ih-pal', PALS[0])
   };
   if (!PALS.includes(state.pal)) state.pal = PALS[0];
-  if (!TEXT[state.lang]) state.lang = 'en';
-  const L = () => TEXT[state.lang];
   const LV = () => LEVELS[state.level];
+  const idx = v => v - state.base;                       // number on the line → island index
+  const inView = (v, base = state.base) => v >= base && v <= base + LV().n - 1;
 
-  /* ---------- Sound (Web Audio synth, no files needed) ---------- */
-  let ctx = null;
-  function audio() {
-    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
-    if (ctx.state === 'suspended') ctx.resume();
-    return ctx;
-  }
-  function tone(type, f0, f1, dur, vol = 0.3, delay = 0) {
-    const a = audio(); if (!a) return;
-    const t = a.currentTime + delay;
-    const o = a.createOscillator(), g = a.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(f0, t);
-    o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(a.destination);
-    o.start(t); o.stop(t + dur + 0.05);
-  }
-  function noise(dur, f0, f1, vol, type = 'bandpass') {
-    const a = audio(); if (!a) return;
-    const t = a.currentTime;
-    const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    const src = a.createBufferSource(); src.buffer = buf;
-    const f = a.createBiquadFilter(); f.type = type; f.Q.value = 1.2;
-    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    const g = a.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(f).connect(g).connect(a.destination); src.start(t);
-  }
-  const sfx = {
-    // Bigger jumps sound bigger: higher, longer boings.
-    boing(k = 1) {
-      tone('sine', 180, 620 + 160 * k, 0.24 + 0.06 * k, 0.4);
-      tone('triangle', 360, 800 + 200 * k, 0.2 + 0.05 * k, 0.15, 0.03);
-    },
-    whoosh(k = 1) { noise(0.4 + 0.08 * k, 2400, 300, 0.55); tone('sine', 700, 160, 0.35 + 0.05 * k, 0.12); },
-    bonk() { tone('square', 160, 70, 0.18, 0.18); tone('sine', 90, 60, 0.25, 0.3, 0.02); },
-    splash() { noise(0.9, 900, 120, 0.7, 'lowpass'); tone('sine', 420, 90, 0.5, 0.25); tone('sine', 300, 80, 0.4, 0.15, 0.25); },
-    zap() { tone('square', 900, 1400, 0.06, 0.05); },
-    win() {
-      [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone('triangle', f, f * 1.01, 0.22, 0.28, i * 0.11));
-      [1568, 2093, 2637].forEach((f, i) => tone('sine', f, f, 0.15, 0.08, 0.8 + i * 0.07));
-    },
-    perfect() { [1319, 1568, 2093, 2637].forEach((f, i) => tone('sine', f, f, 0.2, 0.12, 1.1 + i * 0.09)); },
-    ding() { tone('sine', 1320, 1320, 0.25, 0.18); tone('sine', 1760, 1760, 0.3, 0.12, 0.08); }
-  };
-
-  /* ---------- Voice (the child may not read yet) ---------- */
-  function speak(text) {
-    if (!('speechSynthesis' in window)) return;
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      const want = L().voice;
-      const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(want));
-      if (v) u.voice = v;
-      u.lang = want === 'de' ? 'de-DE' : 'en-US';
-      u.rate = 0.95; u.pitch = 1.3;
-      speechSynthesis.speak(u);
-    } catch (e) {}
-  }
+  /* ---------- Sound: shared kit plus two jump-specific effects ---------- */
+  const sfx = Object.assign({}, Kit.sfx, {
+    whoosh(k = 1) { Kit.sfx.whoosh(); if (k > 2) Kit.sfx.whoosh(); },
+    zap() { Kit.sfx.tap(); }
+  });
   const sayRound = () => speak(L().say(state.target, LV().energy ? state.energy : 0));
 
-  /* ---------- Helpers ---------- */
-  function restart(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
-
-  // Fewest jumps from a to b with the level's steps, never leaving the islands.
-  function fewestJumps(a, b) {
-    const { max, steps } = LV();
-    const dist = new Array(max + 1).fill(-1);
-    const q = [a]; dist[a] = 0;
+  // Fewest jumps from a to b with the level's steps, staying on the islands in view.
+  function fewestJumps(a, b, base = state.base) {
+    const { n, steps } = LV();
+    const dist = new Map([[a, 0]]);
+    const q = [a];
     while (q.length) {
       const x = q.shift();
-      if (x === b) return dist[x];
+      if (x === b) return dist.get(x);
       for (const s of steps) for (const y of [x + s, x - s]) {
-        if (y >= 0 && y <= max && dist[y] < 0) { dist[y] = dist[x] + 1; q.push(y); }
+        if (y >= base && y <= base + n - 1 && !dist.has(y)) { dist.set(y, dist.get(x) + 1); q.push(y); }
       }
     }
     return Infinity;
@@ -454,11 +387,11 @@
     const lv = LV();
     islands.forEach(el => el.remove());
     islands = [];
-    gameEl.style.setProperty('--n', lv.max + 1);
-    for (let i = 0; i <= lv.max; i++) {
+    gameEl.style.setProperty('--n', lv.n);
+    for (let i = 0; i < lv.n; i++) {
       const el = document.createElement('div');
-      el.className = 'island' + (i % 10 === 0 && lv.max > 10 ? ' ten' : '');
-      el.innerHTML = `<div class="top"></div><div class="num">${i}</div><div class="rock"></div>`;
+      el.className = 'island';
+      el.innerHTML = '<div class="top"></div><div class="num"></div><div class="rock"></div>';
       islandsEl.insertBefore(el, arcsEl);
       islands.push(el);
     }
@@ -477,7 +410,7 @@
       const arrow = `<span>${dir > 0 ? '➡' : '⬅'}</span>`;
       b.innerHTML = `<span class="lbl">${dir < 0 ? arrow : ''}<span>${n}</span>${dir > 0 ? arrow : ''}</span>` +
         (single ? `<span class="word">${dir > 0 ? L().boost : L().blast}</span>` : `<span class="dots">${'●'.repeat(s)}</span>`);
-      b.addEventListener('pointerdown', e => { e.preventDefault(); audio(); move(dir * s); });
+      b.addEventListener('pointerdown', e => { e.preventDefault(); Kit.audio(); move(dir * s); });
       b.addEventListener('click', e => { if (e.detail === 0) move(dir * s); }); // keyboard Enter/Space
       state.buttons.push(b);
       return b;
@@ -486,42 +419,81 @@
     lv.steps.forEach(s => plus.appendChild(mk(s, +1)));
     controlsEl.append(minus, plus);
 
-    state.pos = 0; state.target = -1; state.streak = 0;
+    // Start on 0; the negative level opens with 0 somewhere in the middle.
+    state.pos = 0; state.target = null; state.streak = 0;
+    state.base = lv.base[0] < 0 ? Kit.rand(-8, -2) : 0;
+    renumber();
     renderStars();
+    renderProgress(false);
     snapHero();
+  }
+
+  function renumber() {
+    islands.forEach((el, i) => {
+      const v = state.base + i;
+      const num = el.querySelector('.num');
+      num.textContent = fmt(v);
+      num.classList.toggle('long', fmt(v).length > 2);
+      el.classList.toggle('zero', v === 0);
+      el.classList.toggle('ten', v !== 0 && v % 10 === 0);
+      el.classList.toggle('neg', v < 0);
+    });
+  }
+
+  // Slide the view along an endless number line: every island keeps its number while it moves,
+  // so zero (and every other number) visibly travels to its new spot.
+  function panTo(newBase) {
+    const delta = newBase - state.base;
+    if (!delta) return 0;
+    const spacing = islands[1].offsetLeft - islands[0].offsetLeft;
+    state.base = newBase;
+    renumber();
+    snapHero();
+    islandsEl.style.transition = 'none';
+    islandsEl.style.transform = `translateX(${delta * spacing}px)`;
+    void islandsEl.offsetWidth;
+    islandsEl.style.transition = 'transform .8s cubic-bezier(.4,.1,.3,1)';
+    islandsEl.style.transform = 'translateX(0)';
+    sfx.whoosh(1);
+    return 800;
   }
 
   /* ---------- Rendering ---------- */
   const centerX = i => islands[i].offsetLeft + islands[i].offsetWidth / 2;
-  function placeHero() { hero.style.transform = `translateX(${islands[state.pos].offsetLeft}px)`; }
+  function placeHero() { hero.style.transform = `translateX(${islands[idx(state.pos)].offsetLeft}px)`; }
   function snapHero() {
     hero.style.transition = 'none'; placeHero(); void hero.offsetWidth;
     hero.style.transition = '';
   }
   function renderTarget() {
     islands.forEach((el, i) => {
-      el.classList.toggle('target', i === state.target);
-      el.classList.toggle('origin', LV().energy && i === state.roundStart && i !== state.target);
+      const v = state.base + i;
+      el.classList.toggle('target', v === state.target);
+      el.classList.toggle('origin', LV().energy && v === state.roundStart && v !== state.target);
     });
-    bannerText.innerHTML = L().ask(`<span class="num">${state.target}</span>`);
+    bannerText.innerHTML = L().ask(`<span class="num">${fmt(state.target)}</span>`);
     restart(banner, 'bump');
   }
   function renderEnergy(zapIndex) {
     const lv = LV();
     energyEl.classList.toggle('hidden', !lv.energy);
-    if (!lv.energy) { energyEl.innerHTML = ''; return; }
     energyEl.innerHTML = '';
+    if (!lv.energy) return;
     for (let i = 0; i < state.energyMax; i++) {
       const s = document.createElement('span');
-      s.textContent = '⚡\uFE0F';
+      s.textContent = '⚡️';
       if (i >= state.energy) s.classList.add('used');
       if (i === zapIndex) s.classList.add('zap');
       energyEl.appendChild(s);
     }
     energyEl.classList.toggle('low', state.energy === 1 && state.pos !== state.target);
   }
-  function renderStars() { starsEl.textContent = `⭐ ${state.stars[state.level]}`; }
-  function setButtons() { state.buttons.forEach(b => { b.disabled = state.celebrating; }); }
+  function renderStars() { starsEl.textContent = `⭐ ${Kit.stars(STAR_KEY, LEVELS.length)[state.level]}`; }
+  function renderProgress(bump) {
+    Kit.renderProgress(progressEl, PROG_KEY, LEVELS.length, state.level);
+    if (bump) restart(progressEl, 'pop');
+  }
+  function setButtons() { state.buttons.forEach(b => { b.disabled = state.celebrating || state.panning; }); }
 
   function drawArcs() {
     const W = islandsEl.clientWidth;
@@ -533,10 +505,10 @@
     const fs = Math.max(16, Math.min(34, iw * 0.42));
     const seen = {};
     arcsEl.innerHTML = state.arcs.map(({ from, to }) => {
-      const x1 = centerX(from), x2 = centerX(to), mx = (x1 + x2) / 2;
+      const x1 = centerX(idx(from)), x2 = centerX(idx(to)), mx = (x1 + x2) / 2;
       const d = to - from, cls = d > 0 ? 'plus' : 'minus';
       // A hop back over the same islands climbs higher, so labels never sit on top of each other.
-      const key = Math.min(from, to) + '-' + Math.max(from, to);
+      const key = Math.min(from, to) + '/' + Math.max(from, to);
       const layer = seen[key] = (seen[key] ?? -1) + 1;
       const h = Math.min(H - fs - 8, Math.abs(x2 - x1) * 0.55 + 14) + layer * (fs + 6);
       const base = H - 2;
@@ -556,29 +528,36 @@
   }
   function oops(text) {
     oopsEl.textContent = text;
-    oopsEl.classList.toggle('at-left', state.pos <= 1);
-    oopsEl.classList.toggle('at-right', state.pos >= LV().max - 1);
+    oopsEl.classList.toggle('at-left', idx(state.pos) <= 1);
+    oopsEl.classList.toggle('at-right', idx(state.pos) >= LV().n - 2);
     restart(oopsEl, 'show');
   }
 
   /* ---------- Game logic ---------- */
-  function pickTarget() {
+  // Candidate targets inside a view window, same rules as before (distance and jump count limits).
+  function targetsIn(base) {
     const lv = LV(), pos = state.pos, prev = state.target;
-    if (!lv.energy) {
-      const c = [];
-      for (let t = 0; t <= lv.max; t++) if (t !== pos && t !== prev && Math.abs(t - pos) <= 5) c.push(t);
-      return c[(Math.random() * c.length) | 0];
-    }
     const all = [], multi = [];
-    for (let t = 0; t <= lv.max; t++) {
-      if (t === pos || t === prev || Math.abs(t - pos) < lv.minDist) continue;
-      const m = fewestJumps(pos, t);
+    for (let t = base; t <= base + lv.n - 1; t++) {
+      if (t === pos || t === prev) continue;
+      if (!lv.energy) { if (Math.abs(t - pos) <= 5) all.push(t); continue; }
+      if (Math.abs(t - pos) < lv.minDist) continue;
+      const m = fewestJumps(pos, t, base);
       if (m > lv.maxMoves) continue;
       all.push(t); if (m >= 2) multi.push(t);
     }
-    const pool = multi.length && Math.random() < 0.7 ? multi : all;
-    if (pool.length) return pool[(Math.random() * pool.length) | 0];
-    return pos === lv.max ? pos - 1 : pos + 1;
+    return { all, multi };
+  }
+
+  // Choose where the view slides to (it must still show the frog), preferring a real move.
+  function pickView() {
+    const lv = LV();
+    const lo = Math.max(lv.base[0], state.pos - (lv.n - 1)), hi = Math.min(lv.base[1], state.pos);
+    const options = [];
+    for (let b = lo; b <= hi; b++) if (targetsIn(b).all.length) options.push(b);
+    if (!options.length) return state.base;
+    const moved = options.filter(b => Math.abs(b - state.base) >= 2);
+    return Kit.pick(moved.length ? moved : options);
   }
 
   function setupEnergy() {
@@ -590,13 +569,27 @@
   }
 
   function newRound() {
+    const session = state.session;
+    const lv = LV();
     state.roundStart = state.pos;
-    state.target = pickTarget();
+    state.splashed = false;
     clearArcs();
-    if (LV().energy) setupEnergy(); else { state.energy = state.energyMax = 0; state.moves = 0; }
+    const wait = lv.base[0] === lv.base[1] ? 0 : panTo(pickView());
+    const { all, multi } = targetsIn(state.base);
+    const pool = multi.length && Math.random() < 0.7 ? multi : all;
+    state.target = pool.length ? Kit.pick(pool) : (inView(state.pos + 1) ? state.pos + 1 : state.pos - 1);
+    if (lv.energy) setupEnergy(); else { state.energy = state.energyMax = 0; state.moves = 0; }
     renderTarget();
     renderEnergy();
-    sayRound();
+    // No hopping while the line slides; the buttons grey out so the child can see why.
+    state.busy = true;
+    state.panning = wait > 0; setButtons();
+    setTimeout(() => {
+      if (session !== state.session) return;
+      state.busy = false;
+      state.panning = false; setButtons();
+      sayRound();
+    }, wait);
   }
 
   function move(d) {
@@ -604,7 +597,7 @@
     const lv = LV(), k = Math.abs(d);
     const next = state.pos + d;
 
-    if (next < 0 || next > lv.max) {
+    if (!inView(next)) {
       // Too far: lean out, wobble, spring back. Costs no ⚡.
       state.busy = true;
       sfx.bonk();
@@ -642,6 +635,7 @@
   function splash() {
     const session = state.session;
     state.busy = true;
+    state.splashed = true;
     sfx.splash();
     oops(L().splash);
     play('sink');
@@ -665,84 +659,43 @@
 
   function celebrate() {
     const session = state.session;
+    const lv = LV();
     state.celebrating = true; setButtons();
-    const perfect = LV().energy && state.moves === state.minMoves && state.minMoves > 1;
-    state.stars[state.level] += perfect ? 2 : 1;
-    save('ih-stars', JSON.stringify(state.stars));
+    const perfect = lv.energy && state.moves === state.minMoves && state.minMoves > 1;
+    Kit.addStars(STAR_KEY, LEVELS.length, state.level, perfect ? 2 : 1);
+    // A clean win counts towards finishing the level: no splash (level 1: no wasted hops).
+    const clean = lv.energy ? !state.splashed : state.moves === Math.abs(state.target - state.roundStart);
+    const levelDone = clean && Kit.addClean(PROG_KEY, LEVELS.length, state.level);
     state.streak++;
     renderStars(); restart(starsEl, 'pop');
+    renderProgress(clean);
     energyEl.classList.remove('low');
-    sfx.win(); if (perfect) sfx.perfect();
-    speak(perfect ? L().perfectSay : L().cheers[(Math.random() * L().cheers.length) | 0]);
     play('dance');
-    const yay = $('yay'); yay.textContent = perfect ? L().perfect : L().yay; restart(yay, 'show');
-    restart($('flash'), 'on');
     document.body.classList.add('shaking');
-    confetti.burst(perfect ? 1.6 : 1);
+    Kit.celebrate({ text: perfect ? L().perfect : L().yay, perfect, say: perfect ? L().perfectSay : Kit.pick(L().cheers) });
     setTimeout(() => document.body.classList.remove('shaking'), 1000);
 
     setTimeout(() => {
       if (session !== state.session) return; // player went home / changed level meanwhile
       hero.classList.remove('dance');
-      state.celebrating = false; setButtons();
-      sfx.ding();
-      newRound();
-    }, 3000);
-  }
-
-  /* ---------- Confetti ---------- */
-  const confetti = (() => {
-    const cv = $('confetti'), c = cv.getContext('2d');
-    const colors = ['#FFC83D', '#FF6FB5', '#5EF08A', '#6FC8FF', '#C88BFF', '#FF6B6E', '#FFFFFF'];
-    const shapes = ['⭐', '🎉', '✨', '🌟'];
-    let parts = [], running = false;
-    function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
-    addEventListener('resize', resize); resize();
-    function burst(mult = 1) {
-      const W = innerWidth, H = innerHeight;
-      const origins = [[W * 0.15, H], [W * 0.85, H], [W * 0.5, H * 0.35]];
-      origins.forEach(([ox, oy], k) => {
-        for (let i = 0; i < 90 * mult; i++) {
-          const ang = k === 2 ? Math.random() * Math.PI * 2 : -Math.PI / 2 + (Math.random() - 0.5) * 1.1 + (k === 0 ? 0.35 : -0.35);
-          const sp = (k === 2 ? 4 : 11) + Math.random() * 9;
-          parts.push({
-            x: ox, y: oy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-            r: 5 + Math.random() * 7, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
-            color: colors[(Math.random() * colors.length) | 0],
-            emoji: Math.random() < 0.12 ? shapes[(Math.random() * shapes.length) | 0] : null,
-            life: 0, max: 150 + Math.random() * 80
-          });
-        }
+      const next = () => { state.celebrating = false; setButtons(); sfx.ding(); newRound(); };
+      if (!levelDone) return next();
+      const last = state.level === LEVELS.length - 1;
+      Kit.levelUp({
+        last, nextIcon: last ? '' : LEVELS[state.level + 1].icon,
+        onNext: () => startLevel(state.level + 1),
+        onStay: () => { if (session === state.session) next(); }
       });
-      if (!running) { running = true; requestAnimationFrame(tick); }
-    }
-    function tick() {
-      const dpr = devicePixelRatio;
-      c.setTransform(dpr, 0, 0, dpr, 0, 0);
-      c.clearRect(0, 0, innerWidth, innerHeight);
-      parts = parts.filter(p => p.life < p.max && p.y < innerHeight + 40);
-      for (const p of parts) {
-        p.life++; p.vy += 0.25; p.vx *= 0.99; p.vy *= 0.99;
-        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-        c.save(); c.translate(p.x, p.y); c.rotate(p.rot);
-        c.globalAlpha = Math.max(0, 1 - p.life / p.max);
-        if (p.emoji) { c.font = `${p.r * 4}px serif`; c.fillText(p.emoji, -p.r * 2, p.r); }
-        else { c.fillStyle = p.color; c.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); }
-        c.restore();
-      }
-      if (parts.length) requestAnimationFrame(tick);
-      else { running = false; c.clearRect(0, 0, innerWidth, innerHeight); }
-    }
-    return { burst };
-  })();
+    }, 2000);
+  }
 
   /* ---------- Input ---------- */
   addEventListener('keydown', e => {
     if (!state.playing || e.repeat) return;
     const steps = LV().steps;
     const press = d => {
-      const i = state.buttons.findIndex(b => b.getAttribute('aria-label') === (d > 0 ? '+' : '−') + Math.abs(d));
-      if (i >= 0) restart(state.buttons[i], 'pressed'), setTimeout(() => state.buttons[i].classList.remove('pressed'), 120);
+      const b = state.buttons.find(b => b.getAttribute('aria-label') === (d > 0 ? '+' : '−') + Math.abs(d));
+      if (b) { restart(b, 'pressed'); setTimeout(() => b.classList.remove('pressed'), 120); }
       move(d);
     };
     if (e.key === 'ArrowRight') press(+1);
@@ -750,33 +703,29 @@
     else if (/^[1-9]$/.test(e.key) && steps.includes(+e.key)) press(e.shiftKey ? -e.key : +e.key);
   });
 
-  banner.addEventListener('click', () => { if (!state.celebrating) sayRound(); });
+  banner.addEventListener('click', () => { if (!state.celebrating && state.target !== null) sayRound(); });
 
   hero.addEventListener('click', () => {
     if (state.busy || state.celebrating) return;
     state.pal = PALS[(PALS.indexOf(state.pal) + 1) % PALS.length];
-    heroBody.textContent = state.pal; save('ih-pal', state.pal);
+    heroBody.textContent = state.pal; store.set('ih-pal', state.pal);
     sfx.boing(1); play('jump', 520);
   });
 
-  const langBtn = $('langBtn');
-  function renderLang() { langBtn.textContent = L().flag; document.documentElement.lang = state.lang; }
-  langBtn.addEventListener('click', () => {
-    state.lang = state.lang === 'en' ? 'de' : 'en'; save('ih-lang', state.lang);
-    renderLang();
-    refreshButtonWords();
-    renderTarget(); sayRound();
-  });
   function refreshButtonWords() {
     state.buttons.forEach(b => {
       const w = b.querySelector('.word');
       if (w) w.textContent = b.classList.contains('plus') ? L().boost : L().blast;
     });
   }
+  Kit.bindLangButton($('langBtn'), () => {
+    refreshButtonWords();
+    if (state.playing && state.target !== null) { renderTarget(); sayRound(); }
+  });
 
   $('homeBtn').addEventListener('click', () => {
     state.playing = false; state.session++;
-    try { speechSynthesis.cancel(); } catch (e) {}
+    Kit.hush();
     showStart();
   });
 
@@ -787,34 +736,26 @@
     b.className = 'pal' + (p === state.pal ? ' sel' : '');
     b.textContent = p; b.setAttribute('aria-label', 'Pick ' + p);
     b.addEventListener('click', () => {
-      state.pal = p; save('ih-pal', p); heroBody.textContent = p;
+      state.pal = p; store.set('ih-pal', p); heroBody.textContent = p;
       palsEl.querySelectorAll('.pal').forEach(x => x.classList.toggle('sel', x === b));
-      audio(); sfx.boing(1);
+      Kit.audio(); sfx.boing(1);
     });
     palsEl.appendChild(b);
   });
   function showStart() {
-    levelsEl.innerHTML = '';
-    LEVELS.forEach((lv, i) => {
-      const b = document.createElement('button');
-      b.className = 'level' + (i === state.level ? ' last' : '');
-      b.setAttribute('aria-label', 'Level ' + (i + 1));
-      b.innerHTML = `<span class="ico">${lv.icon}</span>` +
-        `<span class="chips">${lv.steps.map(s => `<span class="chip">+${s}</span>`).join('')}` +
-        (lv.max > 10 ? `<span class="chip range">🏝️${lv.max}</span>` : '') + `</span>` +
-        `<span class="got">⭐ ${state.stars[i]}</span>`;
-      b.addEventListener('click', () => startLevel(i));
-      levelsEl.appendChild(b);
-    });
+    Kit.levelTiles(levelsEl, LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel, Kit.progress(PROG_KEY, LEVELS.length).done);
+    $('langSpotStart').appendChild($('langBtn'));   // one language button, moved between screens
     $('start').classList.remove('hide');
   }
   function startLevel(i) {
-    audio(); sfx.ding();
-    state.level = i; save('ih-level', String(i));
+    Kit.audio(); sfx.ding();
+    state.level = i; store.set('ih-level', String(i));
     state.session++;
     $('start').classList.add('hide');
-    state.celebrating = false; state.busy = false;
+    $('langSpotGame').appendChild($('langBtn'));
+    state.celebrating = false; state.busy = false; state.panning = false;
     hero.classList.remove('dance', 'sink');
+    islandsEl.style.transition = 'none'; islandsEl.style.transform = '';
     buildLevel();
     setButtons();
     state.playing = true;
@@ -823,10 +764,8 @@
 
   /* ---------- Init ---------- */
   heroBody.textContent = state.pal;
-  renderLang();
   buildLevel();
   addEventListener('resize', () => { snapHero(); if (state.arcs.length) drawArcs(); });
-  if ('speechSynthesis' in window) speechSynthesis.getVoices(); // warm up the voice list
   showStart();
 })();
 </script>

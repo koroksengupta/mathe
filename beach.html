@@ -87,7 +87,7 @@
 
 <div class="screen" id="start">
   <a class="pill corner" href="index.html" aria-label="Map">🗺️</a>
-  <button class="pill corner-r" id="langBtn0" aria-label="Language"></button>
+  <div class="corner-r" id="langSpotStart"></div>
   <h1 id="title">🐢 Turtle Beach</h1>
   <div class="levels" id="levels"></div>
 </div>
@@ -97,10 +97,11 @@
     <div class="side">
       <button class="pill" id="homeBtn" aria-label="Levels">🏠</button>
       <div class="pill stars" id="stars">⭐ 0</div>
+      <div class="pill progress" id="progress" aria-label="Level progress"></div>
     </div>
     <div class="eq" id="eq" role="status" aria-live="polite"></div>
     <div class="side">
-      <button class="pill" id="langBtn" aria-label="Language"></button>
+      <span id="langSpotGame"><button class="pill" id="langBtn" aria-label="Language"></button></span>
     </div>
   </div>
   <div class="say" id="say"></div>
@@ -131,7 +132,7 @@
     { icon: '🐢', max: 10, step: 3, missing: false, chips: [{ t: '+' }, { t: '−', cls: 'minus' }, { t: '10', cls: 'range' }] },
     { icon: '🦀', max: 10, step: 5, missing: true,  chips: [{ t: '+?' }, { t: '−?', cls: 'minus' }, { t: '10', cls: 'range' }] }
   ];
-  const STAR_KEY = 'mathe-beach-stars';
+  const STAR_KEY = 'mathe-beach-stars', PROG_KEY = 'mathe-beach-progress';
   const ANIMALS = ['🐢', '🦀', '🐧', '🐸', '🦭', '🐙', '🦆', '🐠'];
 
   const TEXT = {
@@ -346,17 +347,36 @@
     const total = Kit.addStars(STAR_KEY, LEVELS.length, state.level, 1);
     starsEl.textContent = `⭐ ${total}`;
     restart(starsEl, 'pop');
+    // Only rounds answered right the first time count towards finishing the level.
+    const clean = state.wrong === 0;
+    const levelDone = clean && Kit.addClean(PROG_KEY, LEVELS.length, state.level);
+    renderProgress(clean);
     herd.querySelectorAll('.animal:not(.crossed)').forEach((el, i) => setTimeout(() => el.classList.add('counted'), i * 60));
     Kit.celebrate({ text: L().yay, say: pick(L().cheers) });
-    setTimeout(() => { if (session === state.session) newRound(); }, 3200);
+    setTimeout(() => {
+      if (session !== state.session) return;
+      if (!levelDone) return newRound();
+      const last = state.level === LEVELS.length - 1;
+      Kit.levelUp({
+        last, nextIcon: last ? '' : LEVELS[state.level + 1].icon,
+        onNext: () => startLevel(state.level + 1),
+        onStay: () => { if (session === state.session) newRound(); }
+      });
+    }, 2000);
   }
 
   /* ---------- Screens ---------- */
+  function renderProgress(bump) {
+    Kit.renderProgress($('progress'), PROG_KEY, LEVELS.length, state.level);
+    if (bump) restart($('progress'), 'pop');
+  }
   function startLevel(i) {
     state.level = i; Kit.store.set('mathe-beach-level', String(i));
     state.session++; state.last = '';
     $('start').classList.add('hide');
     starsEl.textContent = `⭐ ${Kit.stars(STAR_KEY, LEVELS.length)[i]}`;
+    renderProgress(false);
+    $('langSpotGame').appendChild($('langBtn'));
     pad = Kit.numberPad($('pad'), 10, onPick);
     state.playing = true;
     sfx.ding();
@@ -367,7 +387,8 @@
     Kit.hush();
     $('title').textContent = L().title;
     document.title = L().title.replace('🐢 ', '');
-    Kit.levelTiles($('levels'), LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel);
+    Kit.levelTiles($('levels'), LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel, Kit.progress(PROG_KEY, LEVELS.length).done);
+    $('langSpotStart').appendChild($('langBtn'));   // one language button, moved between screens
     $('start').classList.remove('hide');
   }
 
@@ -375,8 +396,7 @@
   eqEl.addEventListener('click', () => { if (state.playing && state.phase !== 'done') tell(); });
   sayEl.addEventListener('click', () => { if (state.playing && state.phase !== 'done') tell(); });
   const onLang = () => { $('title').textContent = L().title; if (state.playing && state.phase !== 'done') tell(); };
-  Kit.bindLangButton($('langBtn'), onLang);
-  Kit.bindLangButton($('langBtn0'), () => { onLang(); showStart(); });
+  Kit.bindLangButton($('langBtn'), () => { onLang(); if (!state.playing) showStart(); });
   // Re-fit the animals whenever the sand changes size (rotation, window resize, pad wrapping).
   if ('ResizeObserver' in window) new ResizeObserver(() => { if (state.round) sizeHerd(); }).observe(beach);
   else addEventListener('resize', () => { if (state.round) sizeHerd(); });

@@ -4,19 +4,25 @@ Playful maths games for preschool kids. No worksheets, no "solve this": just jum
 Open `index.html` (the island map) and pick a game. Everything runs in the browser: double-click works, no install.
 Best on a tablet or phone. Questions are read aloud in English or German (tap 🇬🇧/🇩🇪 to switch).
 
+**Levelling up:** every game shows 5 empty stars at the top. Each *clean* win (first try, no hint, no splash) fills one;
+mistakes never take a star away. When all 5 are filled, a 🏆 screen offers the next level (or 🔁 to stay).
+Finished levels get a 🏆 on their tile. All levels stay open, so a parent can pick any of them.
+
 ## 🐸 Island Hopper: number line jumps
 
 Hop along numbered islands to land on the glowing gold one.
 
-| Level | Jumps | Islands |
+| Level | Jumps | Number line |
 |---|---|---|
-| 🌱 1 | +1 / −1 | 0–10 |
-| 🌊 2 | ±1, ±2 | 0–10 |
-| 🌋 3 | ±1, ±2, ±3 | 0–10 |
-| 🚀 4 | ±1, ±2, ±5 | 0–20 |
+| 🌱 1 | +1 / −1 | 0–10, fixed |
+| 🌊 2 | ±1, ±2 | 11 islands, slides between 0 and 16 |
+| 🌋 3 | ±1, ±2, ±3 | 11 islands, slides between 0 and 20 |
+| 🚀 4 | ±1, ±2, ±5 | 21 islands, slides between 0 and 30 |
+| ❄️ 5 | ±1, ±2, ±3 | 11 islands, slides between −10 and 10 (below zero) |
 
-From level 2, each round has a ⚡ jump budget, so kids plan their route (e.g. +3 +3 +1). Every hop leaves a labelled arc,
-and the fewest possible jumps earns a double star.
+From level 2, the view slides along the number line between rounds (the frog keeps its number), so kids have to read the
+numbers before jumping. Zero always has its own purple island. Each round has a ⚡ jump budget, so kids plan their
+route (e.g. +3 +3 +1). Every hop leaves a labelled arc, and the fewest possible jumps earns a double star.
 
 ## 🌋 Volcano Tower: number walls (Zahlenmauern)
 
