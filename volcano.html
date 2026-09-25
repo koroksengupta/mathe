@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Volcano Tower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kit.css">
+<style>
+  .main{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .stage{flex:1;min-height:0;width:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2vh;}
+  .stage.quake{animation:quake .12s linear 8;}
+  @keyframes quake{0%,100%{transform:translate(0,0)}25%{transform:translate(-5px,2px)}50%{transform:translate(5px,-2px)}75%{transform:translate(-3px,-1px)}}
+
+  /* The number wall sits on a volcano; the "+" roof from the worksheet becomes the glowing crater. */
+  .wallbox{--s:60px;--gap:6px;position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--gap);padding-bottom:calc(var(--s)*.25);}
+  .mountain{position:absolute;left:-28%;right:-28%;top:calc(var(--s)*.35);bottom:0;z-index:0;overflow:visible;}
+  .row{position:relative;z-index:1;display:flex;gap:var(--gap);}
+  .roof{position:relative;z-index:1;width:calc(var(--s)*1.9);height:calc(var(--s)*.8);display:flex;align-items:flex-end;justify-content:center;}
+  .roof::before{content:"";position:absolute;inset:0;clip-path:polygon(50% 0,100% 100%,0 100%);
+    background:linear-gradient(180deg,#FFD34D,#FF7A00 55%,#D62700);animation:lava 1.2s ease-in-out infinite alternate;}
+  @keyframes lava{from{filter:brightness(1)}to{filter:brightness(1.25) saturate(1.2)}}
+  .roof .plus{position:relative;width:calc(var(--s)*.46);height:calc(var(--s)*.46);margin-bottom:calc(var(--s)*.06);border-radius:50%;
+    background:#fff;color:#D62700;font-weight:700;font-size:calc(var(--s)*.42);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 12px rgba(255,200,61,.9);line-height:1;}
+  .smoke{position:absolute;left:50%;bottom:90%;width:calc(var(--s)*.3);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.75);
+    animation:puff 3s ease-out infinite;pointer-events:none;}
+  .smoke.s2{animation-delay:1s;}
+  .smoke.s3{animation-delay:2s;}
+  @keyframes puff{0%{opacity:0;transform:translate(-50%,0) scale(.4)}20%{opacity:.8}100%{opacity:0;transform:translate(-10%,-160%) scale(1.8)}}
+
+  .stone{
+    width:calc(var(--s)*1.3);height:var(--s);border:none;cursor:pointer;padding:0;
+    border-radius:calc(var(--s)*.22);
+    background:linear-gradient(180deg,#A39383,#6E5F52);color:#fff;
+    box-shadow:inset 0 calc(var(--s)*-.08) 0 rgba(0,0,0,.25),0 4px 0 rgba(0,0,0,.2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    font-weight:700;text-shadow:0 2px 0 rgba(0,0,0,.25);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .stone .v{font-size:calc(var(--s)*.56);line-height:1;}
+  .stone .dots{display:none;font-size:max(7px,calc(var(--s)*.13));line-height:1.1;white-space:pre-line;letter-spacing:.04em;text-shadow:none;}
+  .stone.show-dots .dots{display:block;}
+  .stone.show-dots .v{font-size:calc(var(--s)*.42);}
+  .stone.empty{background:rgba(255,255,255,.88);color:var(--ink);text-shadow:none;box-shadow:inset 0 0 0 4px rgba(255,255,255,.95);}
+  .stone.empty .v{opacity:.45;}
+  .stone.filled{background:linear-gradient(180deg,#FFBE5C,#E8751A);}
+  .stone.sel{box-shadow:0 0 0 6px var(--gold),0 0 26px var(--gold-glow);transform:scale(1.07);z-index:2;}
+  .stone.sel .v{opacity:1;animation:blink 1s ease-in-out infinite;}
+  @keyframes blink{50%{opacity:.35}}
+  .stone.partner{box-shadow:0 0 0 5px #6FC8FF,0 0 20px #6FC8FF;}
+  .stone:focus-visible{outline:4px solid #fff;outline-offset:3px;}
+
+  @media (max-height:520px) and (orientation:landscape){
+    .main{flex-direction:row;align-items:stretch;}
+    .main .pad{width:42%;align-content:center;}
+    .main .pad button{--size:clamp(34px,9.5vh,64px);}
+    .banner{font-size:18px;padding:2px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="screen" id="start">
+  <a class="pill corner" href="index.html" aria-label="Map">🗺️</a>
+  <button class="pill corner-r" id="langBtn0" aria-label="Language"></button>
+  <h1 id="title">🌋 Volcano Tower</h1>
+  <div class="levels" id="levels"></div>
+</div>
+
+<div class="game">
+  <div class="topbar">
+    <div class="side">
+      <button class="pill" id="homeBtn" aria-label="Levels">🏠</button>
+      <div class="pill stars" id="stars">⭐ 0</div>
+    </div>
+    <div class="side">
+      <button class="pill" id="hintBtn" aria-label="Hint">💡</button>
+      <button class="pill" id="langBtn" aria-label="Language"></button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" role="status" aria-live="polite">
+    <span class="speaker">🔊</span><span id="bannerText"></span>
+  </div>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <div class="wallbox" id="wallbox"></div>
+    </div>
+    <div class="pad" id="pad"></div>
+  </div>
+</div>
+
+<script src="kit.js"></script>
+<script>
+(() => {
+  'use strict';
+  const { sfx, speak, restart } = Kit;
+
+  const LEVELS = [
+    { icon: '🪨', rows: 3, max: 10, mixed: false, chips: [{ t: '+' }] },
+    { icon: '🌋', rows: 3, max: 10, mixed: true,  chips: [{ t: '+' }, { t: '−', cls: 'minus' }] },
+    { icon: '🔥', rows: 4, max: 20, mixed: true,  chips: [{ t: '+' }, { t: '−', cls: 'minus' }, { t: '20', cls: 'range' }] }
+  ];
+  const STAR_KEY = 'mathe-volcano-stars';
+
+  const TEXT = {
+    en: {
+      title: '🌋 Volcano Tower',
+      rule: 'Two stones below make the stone on top!',
+      next: 'A new volcano!',
+      yay: 'BOOM! 🌋', perfect: 'PERFECT! 🌟',
+      cheers: ['Boom! You did it!', 'Wow! What an eruption!', 'Super!'],
+      perfectSay: 'Perfect! Double star!',
+      plus: (a, b) => `${a} plus ${b}`, minus: (a, b) => `${a} minus ${b}`
+    },
+    de: {
+      title: '🌋 Vulkan-Turm',
+      rule: 'Zwei Steine unten ergeben den Stein oben!',
+      next: 'Ein neuer Vulkan!',
+      yay: 'BUMM! 🌋', perfect: 'PERFEKT! 🌟',
+      cheers: ['Bumm! Geschafft!', 'Wow! Was für ein Ausbruch!', 'Super!'],
+      perfectSay: 'Perfekt! Doppelstern!',
+      plus: (a, b) => `${a} plus ${b}`, minus: (a, b) => `${a} minus ${b}`
+    }
+  };
+  const L = () => TEXT[Kit.lang];
+
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), wallbox = $('wallbox'), bannerText = $('bannerText'), starsEl = $('stars');
+
+  const state = {
+    level: Math.min(LEVELS.length - 1, +Kit.store.get('mathe-volcano-level', '0') || 0),
+    sol: [], known: [], given: [], stones: [],
+    sel: null, wrongs: {}, mistakes: 0, usedHint: false, hintFor: null, hintSay: '',
+    busy: false, playing: false, session: 0, rounds: 0, lastBottom: ''
+  };
+  const LV = () => LEVELS[state.level];
+  const key = (r, i) => r + '-' + i;
+
+  /* ---------- Puzzle logic ----------
+     Row 0 is the bottom. Every stone above is the sum of the two below it:
+     sol[r][i] = sol[r-1][i] + sol[r-1][i+1]. */
+  function equations(n) {
+    const eq = [];
+    for (let r = 1; r < n; r++) for (let i = 0; i < n - r; i++) eq.push({ top: [r, i], a: [r - 1, i], b: [r - 1, i + 1] });
+    return eq;
+  }
+
+  // Stones that can be worked out right now from the known ones (+ upwards, − sideways/down).
+  function deducible(known, n) {
+    const out = [];
+    for (const e of equations(n)) {
+      const [t, a, b] = [e.top, e.a, e.b];
+      const kt = known[t[0]][t[1]], ka = known[a[0]][a[1]], kb = known[b[0]][b[1]];
+      if (kt + ka + kb !== 2) continue;
+      if (!kt) out.push({ cell: t, op: '+', partners: [a, b] });
+      else if (!ka) out.push({ cell: a, op: '−', partners: [t, b] });
+      else out.push({ cell: b, op: '−', partners: [t, a] });
+    }
+    return out;
+  }
+
+  // A puzzle is fair if it can be filled one stone at a time, each from two known neighbours.
+  function solvable(givenSet, n) {
+    const known = Array.from({ length: n }, (_, r) => Array.from({ length: n - r }, (_, i) => givenSet.has(key(r, i))));
+    for (;;) {
+      const d = deducible(known, n);
+      if (!d.length) break;
+      d.forEach(({ cell }) => { known[cell[0]][cell[1]] = true; });
+    }
+    return known.every(row => row.every(Boolean));
+  }
+
+  function generate() {
+    const { rows: n, max, mixed } = LV();
+    const binom = n === 3 ? [1, 2, 1] : [1, 3, 3, 1];
+    const hi = n === 3 ? 5 : 4, minTop = n === 3 ? 5 : 10;
+    let bottom, top, tries = 0;
+    do {
+      bottom = Array.from({ length: n }, () => Kit.rand(1, hi));
+      top = bottom.reduce((s, v, i) => s + v * binom[i], 0);
+      tries++;
+    } while ((top > max || top < minTop || bottom.join() === state.lastBottom) && tries < 500);
+    state.lastBottom = bottom.join();
+
+    const sol = [bottom];
+    for (let r = 1; r < n; r++) sol.push(Array.from({ length: n - r }, (_, i) => sol[r - 1][i] + sol[r - 1][i + 1]));
+
+    let givenSet;
+    const bottomSet = new Set(bottom.map((_, i) => key(0, i)));
+    if (!mixed) givenSet = bottomSet;
+    else {
+      const all = [];
+      for (let r = 0; r < n; r++) for (let i = 0; i < n - r; i++) all.push(key(r, i));
+      for (let t = 0; t < 2000; t++) {
+        const s = new Set([...all].sort(() => Math.random() - 0.5).slice(0, n));
+        const isBottom = [...s].every(k => bottomSet.has(k));
+        if (!isBottom && solvable(s, n)) { givenSet = s; break; }
+      }
+      if (!givenSet) givenSet = bottomSet;
+    }
+    state.sol = sol;
+    state.given = sol.map((row, r) => row.map((_, i) => givenSet.has(key(r, i))));
+    state.known = state.given.map(row => row.slice());
+  }
+
+  /* ---------- Rendering ---------- */
+  function dots(n) {
+    const groups = [];
+    for (let i = 0; i < n; i += 5) groups.push('●'.repeat(Math.min(5, n - i)));
+    return groups.reduce((s, g, i) => s + (i === 0 ? '' : i % 2 ? ' ' : '\n') + g, '');
+  }
+
+  function build() {
+    const n = LV().rows;
+    wallbox.innerHTML =
+      `<svg class="mountain" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+         <defs>
+           <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1">
+             <stop offset="0" stop-color="#8C6A52"/><stop offset=".7" stop-color="#6B4E3B"/><stop offset="1" stop-color="#4E382A"/>
+           </linearGradient>
+         </defs>
+         <polygon points="0,100 38,2 62,2 100,100" fill="url(#rock)"/>
+         <path d="M39.6,3 C39,7 40.2,10 39.4,15 M60.4,3 C61,6 59.8,9 60.6,12" stroke="#FF7A00" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>
+         <path d="M0,100 C18,90 30,93 50,91 C70,93 82,90 100,100 Z" fill="#55C241"/>
+       </svg>
+       <div class="roof"><span class="smoke"></span><span class="smoke s2"></span><span class="smoke s3"></span><span class="plus">+</span></div>`;
+    state.stones = state.sol.map(row => row.map(() => null));
+    for (let r = n - 1; r >= 0; r--) {
+      const row = document.createElement('div'); row.className = 'row';
+      for (let i = 0; i < n - r; i++) {
+        const b = document.createElement('button');
+        b.className = 'stone';
+        b.innerHTML = '<span class="v"></span><span class="dots"></span>';
+        b.querySelector('.dots').textContent = dots(state.sol[r][i]);
+        b.addEventListener('pointerdown', e => { e.preventDefault(); Kit.audio(); select(r, i, true); });
+        b.addEventListener('click', e => { if (e.detail === 0) select(r, i, true); });
+        row.appendChild(b);
+        state.stones[r][i] = b;
+      }
+      wallbox.appendChild(row);
+    }
+    renderStones();
+    layout();
+  }
+
+  function renderStones() {
+    state.sol.forEach((row, r) => row.forEach((v, i) => {
+      const b = state.stones[r][i];
+      const known = state.known[r][i];
+      b.classList.toggle('empty', !known);
+      b.classList.toggle('filled', known && !state.given[r][i]);
+      b.querySelector('.v').textContent = known ? v : '?';
+      b.setAttribute('aria-label', known ? String(v) : 'empty');
+    }));
+  }
+
+  function layout() {
+    const n = LV().rows;
+    const W = stage.clientWidth, H = stage.clientHeight;
+    const gap = 6;
+    const s = Math.max(24, Math.min(
+      (W * 0.62 - (n - 1) * gap) / (1.3 * n),   // room for the mountain slopes left and right
+      (H * 0.94 - n * gap) / (n + 1.05),         // rows + crater + base
+      120));
+    wallbox.style.setProperty('--s', s + 'px');
+    wallbox.style.setProperty('--gap', gap + 'px');
+  }
+
+  function clearHighlights() {
+    state.stones.flat().forEach(b => b.classList.remove('sel', 'partner', 'show-dots'));
+  }
+
+  function select(r, i, byTap) {
+    if (!state.playing || state.busy) return;
+    if (state.known[r][i]) { if (byTap) { sfx.tap(); restart(state.stones[r][i], 'pop'); } return; }
+    state.sel = [r, i];
+    clearHighlights();
+    state.stones[r][i].classList.add('sel');
+    pad.clearMarks();
+    (state.wrongs[key(r, i)] || []).forEach(n => pad.markWrong(n));
+    if (state.hintFor === key(r, i)) showHint(false);
+    else bannerText.textContent = L().rule;
+    if (byTap) sfx.tap();
+  }
+
+  function selectNext() {
+    const n = LV().rows;
+    const d = deducible(state.known, n);
+    if (d.length) {
+      // Work bottom-up and left-to-right, like on paper.
+      d.sort((x, y) => x.cell[0] - y.cell[0] || x.cell[1] - y.cell[1]);
+      select(d[0].cell[0], d[0].cell[1]);
+      return;
+    }
+    for (let r = 0; r < n; r++) for (let i = 0; i < n - r; i++) if (!state.known[r][i]) return select(r, i);
+  }
+
+  function showHint(say) {
+    if (!state.sel) return;
+    const n = LV().rows;
+    const d = deducible(state.known, n);
+    let h = d.find(x => x.cell[0] === state.sel[0] && x.cell[1] === state.sel[1]);
+    if (!h) { h = d[0]; if (!h) return; select(h.cell[0], h.cell[1]); }
+    state.hintFor = key(h.cell[0], h.cell[1]);
+    state.usedHint = true;
+    const [p, q] = h.partners.map(([r, i]) => state.sol[r][i]);
+    h.partners.forEach(([r, i]) => state.stones[r][i].classList.add('partner', 'show-dots'));
+    bannerText.textContent = h.op === '+' ? `${p} + ${q} = ?` : `${p} − ${q} = ?`;
+    state.hintSay = h.op === '+' ? L().plus(p, q) : L().minus(p, q);
+    if (say) speak(state.hintSay);
+  }
+
+  /* ---------- Answering ---------- */
+  function onPick(n, btn) {
+    if (!state.playing || state.busy || !state.sel) return;
+    const [r, i] = state.sel;
+    const stone = state.stones[r][i];
+    if (n === state.sol[r][i]) {
+      state.known[r][i] = true;
+      state.sel = null; state.hintFor = null;
+      sfx.clack();
+      clearHighlights();
+      renderStones();
+      restart(stone, 'pop');
+      if (state.known.every(row => row.every(Boolean))) finish();
+      else { bannerText.textContent = L().rule; setTimeout(() => { if (state.playing && !state.busy) selectNext(); }, 250); }
+    } else {
+      const k = key(r, i);
+      (state.wrongs[k] = state.wrongs[k] || []).push(n);
+      state.mistakes++;
+      pad.markWrong(n);
+      sfx.bonk();
+      restart(stone, 'shake');
+      if (state.wrongs[k].length >= 2) showHint(true);
+    }
+  }
+
+  function finish() {
+    const session = state.session;
+    state.busy = true;
+    const perfect = state.mistakes === 0 && !state.usedHint;
+    const total = Kit.addStars(STAR_KEY, LEVELS.length, state.level, perfect ? 2 : 1);
+    starsEl.textContent = `⭐ ${total}`;
+    restart(starsEl, 'pop');
+    sfx.rumble();
+    restart(stage, 'quake');
+    setTimeout(() => {
+      if (session !== state.session) return;
+      const roof = wallbox.querySelector('.roof').getBoundingClientRect();
+      Kit.confetti.burst({
+        count: 170, round: true, emoji: null, gravity: 0.32,
+        colors: ['#FF4500', '#FF7A00', '#FFB000', '#FFD34D', '#D62700'],
+        origins: [{ x: roof.left + roof.width / 2, y: roof.top + roof.height * 0.4, ang: -Math.PI / 2, spread: 0.9, speed: 12 }]
+      });
+      Kit.celebrate({
+        text: perfect ? L().perfect : L().yay, perfect,
+        say: perfect ? L().perfectSay : Kit.pick(L().cheers)
+      });
+    }, 700);
+    setTimeout(() => { if (session === state.session) newWall(); }, 3700);
+  }
+
+  function newWall() {
+    state.busy = false;
+    state.wrongs = {}; state.mistakes = 0; state.usedHint = false; state.hintFor = null; state.sel = null;
+    generate();
+    build();
+    pad.clearMarks();
+    bannerText.textContent = L().rule;
+    speak(state.rounds++ === 0 ? L().rule : L().next);
+    selectNext();
+  }
+
+  /* ---------- Screens ---------- */
+  let pad = null;
+  function startLevel(i) {
+    state.level = i; Kit.store.set('mathe-volcano-level', String(i));
+    state.session++; state.rounds = 0; state.lastBottom = '';
+    $('start').classList.add('hide');
+    starsEl.textContent = `⭐ ${Kit.stars(STAR_KEY, LEVELS.length)[i]}`;
+    pad = Kit.numberPad($('pad'), LV().max, onPick);
+    state.playing = true;
+    sfx.ding();
+    newWall();
+  }
+  function showStart() {
+    state.playing = false; state.session++;
+    Kit.hush();
+    $('title').textContent = L().title;
+    document.title = L().title.replace('🌋 ', '');
+    Kit.levelTiles($('levels'), LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel);
+    $('start').classList.remove('hide');
+  }
+
+  $('homeBtn').addEventListener('click', showStart);
+  $('hintBtn').addEventListener('click', () => { Kit.audio(); if (state.playing && !state.busy) showHint(true); });
+  $('banner').addEventListener('click', () => { if (state.playing) speak(state.hintFor ? state.hintSay : L().rule); });
+  const onLang = () => {
+    $('title').textContent = L().title;
+    if (state.playing && !state.hintFor) bannerText.textContent = L().rule;
+  };
+  Kit.bindLangButton($('langBtn'), onLang);
+  Kit.bindLangButton($('langBtn0'), () => { onLang(); showStart(); });
+  addEventListener('resize', () => { if (state.stones.length) layout(); });
+
+  showStart();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Turtle Beach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kit.css">
+<style>
+  .main{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;}
+
+  /* Equation cards, drawn like the worksheet boxes */
+  .eq{display:flex;align-items:center;gap:clamp(6px,1.4vw,16px);background:#fff;border-radius:24px;padding:6px 18px;
+    box-shadow:0 6px 0 rgba(0,0,0,.14);border:5px solid var(--gold);cursor:pointer;}
+  .eq .box{min-width:1.5em;height:1.5em;padding:0 .15em;display:flex;align-items:center;justify-content:center;
+    border:3px solid #9AA5B8;border-radius:12px;font-size:clamp(28px,5vw,58px);font-weight:700;line-height:1;}
+  .eq .op{font-size:clamp(28px,5vw,58px);font-weight:700;}
+  .eq .op.minus{color:var(--stop);}
+  .eq .op.plus{color:var(--go-dark);}
+  .eq .box.q{border-color:var(--gold);background:#FFF6D6;color:#C98A00;animation:qpulse 1s ease-in-out infinite;}
+  .eq .box.solved{border-color:var(--go);background:#E4F8EA;color:var(--go-dark);animation:none;}
+  @keyframes qpulse{50%{transform:scale(1.1)}}
+  .say{font-size:clamp(16px,2.6vw,28px);font-weight:700;background:rgba(255,255,255,.85);border-radius:999px;padding:3px 16px;
+    box-shadow:0 3px 0 rgba(0,0,0,.1);cursor:pointer;text-align:center;}
+
+  /* Beach & sea */
+  .scene{flex:1;min-height:0;min-width:0;width:100%;max-width:1300px;display:flex;align-items:stretch;gap:8px;}
+  .beach{position:relative;flex:3;min-width:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse 52% 54% at 50% 52%,var(--sand) 0%,var(--sand) 88%,var(--sand-dark) 96%,transparent 100%);}
+  .palm{position:absolute;left:4%;top:0;font-size:clamp(34px,7vw,90px);pointer-events:none;transform-origin:50% 100%;animation:sway 4s ease-in-out infinite;}
+  @keyframes sway{50%{transform:rotate(4deg)}}
+  .herd{--a:60px;position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:calc(var(--a)*.12);
+    width:calc(var(--a)*5.8);max-width:92%;}
+  .animal{position:relative;width:var(--a);height:var(--a);border:none;background:none;cursor:pointer;padding:0;
+    font-size:calc(var(--a)*.82);line-height:1;display:flex;align-items:center;justify-content:center;
+    filter:drop-shadow(0 4px 2px rgba(0,0,0,.2));}
+  .animal .e{display:inline-block;animation:idle 1.6s ease-in-out infinite;}
+  .animal:nth-child(even) .e{animation-delay:-.8s;}
+  @keyframes idle{50%{transform:translateY(-4%) scale(1.04,.96)}}
+  .animal.crossed .e{opacity:.4;animation:none;}
+  .animal.crossed::after{content:"";position:absolute;left:4%;right:4%;top:47%;height:max(4px,calc(var(--a)*.07));
+    background:#2B2A33;border-radius:4px;transform:rotate(-40deg);animation:strike .25s ease-out;}
+  @keyframes strike{from{transform:rotate(-40deg) scaleX(0)}to{transform:rotate(-40deg) scaleX(1)}}
+  .animal.added::before{content:"";position:absolute;inset:-6%;border-radius:50%;background:radial-gradient(circle,rgba(255,236,140,.85),transparent 70%);z-index:-1;}
+  .animal.hop-in{animation:hopIn .55s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes hopIn{from{transform:translate(120%,-60%) scale(.4);opacity:0}to{transform:none;opacity:1}}
+  .animal.counted .e{animation:countHop .4s ease;}
+  @keyframes countHop{50%{transform:translateY(-25%) scale(1.15)}}
+  .animal .badge{position:absolute;top:-8%;right:-8%;min-width:44%;height:44%;border-radius:999px;background:var(--gold);color:var(--ink);
+    font-size:calc(var(--a)*.3);font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(0,0,0,.2);}
+  .ghost{width:var(--a);height:var(--a);border-radius:50%;border:4px dashed rgba(35,50,74,.45);animation:kit-pop .5s ease;}
+
+  .sea{position:relative;flex:1.15;min-width:0;display:flex;align-items:center;justify-content:center;}
+  .boat{position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;border:none;background:none;padding:0;
+    animation:bob 2.4s ease-in-out infinite;}
+  .boat.hidden{visibility:hidden;}
+  .boat.arrive{animation:arrive .9s ease-out, bob 2.4s ease-in-out .9s infinite;}
+  .boat.leave{animation:leave 1s ease-in forwards;}
+  @keyframes bob{50%{transform:translateY(-8px) rotate(-3deg)}}
+  @keyframes arrive{from{transform:translateX(120%)}to{transform:none}}
+  @keyframes leave{to{transform:translateX(160%)}}
+  .boat .cargo{--c:44px;display:flex;flex-wrap:wrap;justify-content:center;max-width:calc(var(--c)*3.3);font-size:var(--c);line-height:1.05;margin-bottom:-10%;}
+  .boat .tarp{font-size:calc(var(--c)*1.1);width:calc(var(--c)*2.4);height:calc(var(--c)*1.3);border-radius:18px 18px 6px 6px;
+    background:repeating-linear-gradient(45deg,#E94F4F 0 14px,#FFFFFF 14px 28px);display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;text-shadow:0 2px 0 rgba(0,0,0,.35);margin-bottom:-8%;}
+  .boat .hull{font-size:calc(var(--c)*2.2);line-height:1;}
+  .boat .tapme{position:absolute;right:-10%;top:-10%;font-size:calc(var(--c)*.9);animation:tapme 1s ease-in-out infinite;}
+  @keyframes tapme{50%{transform:translate(-6px,6px) scale(.9)}}
+
+  @media (orientation:portrait) and (max-width:700px){
+    .topbar{flex-wrap:wrap;}
+    .topbar .eq{order:3;margin:0 auto;}
+    .eq .box,.eq .op{font-size:34px;}
+  }
+  @media (max-height:520px) and (orientation:landscape){
+    .main{flex-direction:row;align-items:stretch;}
+    .main .pad{width:34%;align-content:center;}
+    .main .pad button{--size:clamp(34px,10vh,64px);}
+    .eq .box,.eq .op{font-size:30px;}
+    .say{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="screen" id="start">
+  <a class="pill corner" href="index.html" aria-label="Map">🗺️</a>
+  <button class="pill corner-r" id="langBtn0" aria-label="Language"></button>
+  <h1 id="title">🐢 Turtle Beach</h1>
+  <div class="levels" id="levels"></div>
+</div>
+
+<div class="game">
+  <div class="topbar">
+    <div class="side">
+      <button class="pill" id="homeBtn" aria-label="Levels">🏠</button>
+      <div class="pill stars" id="stars">⭐ 0</div>
+    </div>
+    <div class="eq" id="eq" role="status" aria-live="polite"></div>
+    <div class="side">
+      <button class="pill" id="langBtn" aria-label="Language"></button>
+    </div>
+  </div>
+  <div class="say" id="say"></div>
+
+  <div class="main">
+    <div class="scene">
+      <div class="beach" id="beach">
+        <div class="palm">🌴</div>
+        <div class="herd" id="herd"></div>
+      </div>
+      <div class="sea">
+        <button class="boat hidden" id="boat" aria-label="Boat"></button>
+      </div>
+    </div>
+    <div class="pad" id="pad"></div>
+  </div>
+</div>
+
+<script src="kit.js"></script>
+<script>
+(() => {
+  'use strict';
+  const { sfx, speak, restart, rand, pick } = Kit;
+
+  // Level 1 mirrors the worksheet (up to 5, one more / one less); level 3 hides the middle number.
+  const LEVELS = [
+    { icon: '🐣', max: 5,  step: 1, missing: false, chips: [{ t: '+' }, { t: '−', cls: 'minus' }, { t: '5', cls: 'range' }] },
+    { icon: '🐢', max: 10, step: 3, missing: false, chips: [{ t: '+' }, { t: '−', cls: 'minus' }, { t: '10', cls: 'range' }] },
+    { icon: '🦀', max: 10, step: 5, missing: true,  chips: [{ t: '+?' }, { t: '−?', cls: 'minus' }, { t: '10', cls: 'range' }] }
+  ];
+  const STAR_KEY = 'mathe-beach-stars';
+  const ANIMALS = ['🐢', '🦀', '🐧', '🐸', '🦭', '🐙', '🦆', '🐠'];
+
+  const TEXT = {
+    en: {
+      title: '🐢 Turtle Beach',
+      minusAct: b => b === 1 ? 'One swims away. Tap one!' : `${b} swim away. Tap ${b}!`,
+      plusAct: 'More friends are coming. Tap the boat!',
+      left: 'How many are left?', now: 'How many are there now?',
+      missPlus: c => `There should be ${c}. How many are in the boat?`,
+      missMinus: c => `Only ${c} may stay. Tap the others away!`,
+      again: 'Count again!',
+      yay: 'YAY! 🎉', cheers: ['Yay! You did it!', 'Super counting!', 'Wow! Amazing!', 'Hooray!']
+    },
+    de: {
+      title: '🐢 Schildkröten-Strand',
+      minusAct: b => b === 1 ? 'Einer schwimmt weg. Tippe einen an!' : `${b} schwimmen weg. Tippe ${b} an!`,
+      plusAct: 'Es kommen noch Freunde. Tippe auf das Boot!',
+      left: 'Wie viele sind noch da?', now: 'Wie viele sind es jetzt?',
+      missPlus: c => `Es sollen ${c} sein. Wie viele sind im Boot?`,
+      missMinus: c => `Nur ${c} dürfen bleiben. Tippe die anderen weg!`,
+      again: 'Zähl nochmal!',
+      yay: 'JUHU! 🎉', cheers: ['Juhu! Geschafft!', 'Super gezählt!', 'Wow! Toll!', 'Hurra!']
+    }
+  };
+  const L = () => TEXT[Kit.lang];
+
+  const $ = id => document.getElementById(id);
+  const eqEl = $('eq'), sayEl = $('say'), herd = $('herd'), beach = $('beach'), boat = $('boat'), starsEl = $('stars');
+
+  const state = {
+    level: Math.min(LEVELS.length - 1, +Kit.store.get('mathe-beach-level', '0') || 0),
+    round: null, phase: 'idle', taps: 0, wrong: 0,
+    playing: false, busy: false, session: 0, last: ''
+  };
+  const LV = () => LEVELS[state.level];
+  let pad = null;
+
+  /* ---------- Rounds ---------- */
+  function makeRound() {
+    const { max, step, missing } = LV();
+    let r, tries = 0;
+    do {
+      const kind = Math.random() < 0.5 ? 'minus' : 'plus';
+      let a, b;
+      if (kind === 'minus') { a = rand(Math.max(2, step === 1 ? 2 : 3), max); b = rand(1, Math.min(step, a - 1)); }
+      else { a = rand(1, max - 1); b = rand(1, Math.min(step, max - a)); }
+      r = { kind, a, b, c: kind === 'minus' ? a - b : a + b, missing, animal: pick(ANIMALS) };
+      tries++;
+    } while (`${r.kind}${r.a}${r.b}` === state.last && tries < 50);
+    state.last = `${r.kind}${r.a}${r.b}`;
+    return r;
+  }
+
+  const instruction = () => {
+    const r = state.round;
+    if (state.phase === 'count' && !r.missing) return r.kind === 'minus' ? L().left : L().now;
+    if (r.missing) return r.kind === 'minus' ? L().missMinus(r.c) : L().missPlus(r.c);
+    return r.kind === 'minus' ? L().minusAct(r.b) : L().plusAct;
+  };
+  function tell() { const t = instruction(); sayEl.textContent = '🔊 ' + t; speak(t); }
+
+  function renderEq(solved) {
+    const r = state.round;
+    const q = r.missing ? 'b' : 'c';
+    const box = (k, v) => `<span class="box ${k === q ? (solved ? 'solved' : 'q') : ''}">${k === q && !solved ? '?' : v}</span>`;
+    eqEl.innerHTML = box('a', r.a) +
+      `<span class="op ${r.kind}">${r.kind === 'minus' ? '−' : '+'}</span>` +
+      box('b', r.b) + '<span class="op">=</span>' + box('c', r.c);
+  }
+
+  function sizeHerd() {
+    const r = state.round;
+    const n = r.kind === 'plus' ? r.c : r.a;
+    const cols = Math.min(5, Math.max(n, 3)), rows = Math.ceil(n / 5);
+    const W = beach.clientWidth * 0.8, H = beach.clientHeight * 0.78;
+    const a = Math.max(26, Math.min(W / (cols * 1.14), H / (rows * 1.14), 110));
+    herd.style.setProperty('--a', a + 'px');
+    boat.style.setProperty('--c', Math.max(22, Math.min(a * 0.62, 56)) + 'px');
+  }
+
+  function addAnimal(emoji, extraCls) {
+    const b = document.createElement('button');
+    b.className = 'animal' + (extraCls ? ' ' + extraCls : '');
+    b.innerHTML = `<span class="e">${emoji}</span>`;
+    b.setAttribute('aria-label', 'animal');
+    b.addEventListener('pointerdown', e => { e.preventDefault(); Kit.audio(); tapAnimal(b); });
+    b.addEventListener('click', e => { if (e.detail === 0) tapAnimal(b); });
+    herd.appendChild(b);
+    return b;
+  }
+
+  function renderBoat() {
+    const r = state.round;
+    boat.className = 'boat';
+    if (r.kind !== 'plus') { boat.classList.add('hidden'); boat.innerHTML = ''; return; }
+    const cargo = r.missing ? `<span class="tarp">?</span>` : `<span class="cargo">${r.animal.repeat(r.b)}</span>`;
+    boat.innerHTML = cargo + '<span class="hull">🛶</span>' + (r.missing ? '' : '<span class="tapme">👆</span>');
+    restart(boat, 'arrive');
+  }
+
+  function newRound() {
+    const session = state.session;
+    state.round = makeRound();
+    state.taps = 0; state.wrong = 0; state.busy = false;
+    const r = state.round;
+    herd.innerHTML = '';
+    for (let i = 0; i < r.a; i++) addAnimal(r.animal);
+    sizeHerd();
+    renderBoat();
+    renderEq(false);
+    pad.clearMarks();
+    state.phase = r.missing && r.kind === 'plus' ? 'count' : 'act';
+    pad.enable(state.phase === 'count');
+    setTimeout(() => { if (session === state.session) tell(); }, 300);
+  }
+
+  /* ---------- Actions ---------- */
+  function tapAnimal(el) {
+    const r = state.round;
+    if (!state.playing || state.busy || state.phase !== 'act' || r.kind !== 'minus') return;
+    if (el.classList.contains('crossed')) {
+      if (!r.missing) return;            // level 3: tapping again brings it back
+      el.classList.remove('crossed'); state.taps--; sfx.boing(1);
+      return;
+    }
+    el.classList.add('crossed'); state.taps++;
+    sfx.splash();
+    if (!r.missing && state.taps === r.b) {
+      state.phase = 'count';
+      pad.enable(true);
+      setTimeout(tell, 450);
+    } else if (r.missing && r.a - state.taps === r.c) {
+      success();
+    }
+  }
+
+  function unload(after) {
+    const r = state.round;
+    const session = state.session;
+    boat.querySelector('.tapme')?.remove();
+    const tarp = boat.querySelector('.tarp');
+    if (tarp) tarp.outerHTML = `<span class="cargo">${r.animal.repeat(r.b)}</span>`;
+    herd.querySelectorAll('.ghost').forEach(g => g.remove());
+    const cargo = boat.querySelector('.cargo');
+    for (let i = 0; i < r.b; i++) {
+      setTimeout(() => {
+        if (session !== state.session) return;
+        if (cargo) cargo.textContent = r.animal.repeat(r.b - i - 1);
+        addAnimal(r.animal, 'added hop-in');
+        sfx.boing(1);
+      }, 250 + i * 330);
+    }
+    setTimeout(() => {
+      if (session !== state.session) return;
+      restart(boat, 'leave');
+      after();
+    }, 350 + r.b * 330);
+  }
+
+  boat.addEventListener('pointerdown', e => {
+    e.preventDefault(); Kit.audio();
+    const r = state.round;
+    if (!state.playing || state.busy || state.phase !== 'act' || !r || r.kind !== 'plus') return;
+    state.busy = true;
+    unload(() => { state.busy = false; state.phase = 'count'; pad.enable(true); tell(); });
+  });
+
+  function onPick(n) {
+    const r = state.round;
+    if (!state.playing || state.busy || state.phase !== 'count') return;
+    const answer = r.missing ? r.b : r.c;
+    if (n === answer) {
+      if (r.missing && r.kind === 'plus') { state.busy = true; unload(success); }
+      else success();
+      return;
+    }
+    state.wrong++;
+    pad.markWrong(n);
+    sfx.bonk();
+    if (r.missing) {
+      restart(boat, 'shake');
+      speak(L().again);
+      // Hint: dashed spots on the sand show the gap to fill.
+      if (state.wrong >= 2 && !herd.querySelector('.ghost')) {
+        for (let i = 0; i < r.b; i++) { const g = document.createElement('span'); g.className = 'ghost'; herd.appendChild(g); }
+      }
+    } else if (state.wrong >= 2) countAlong();
+    else speak(L().again);
+  }
+
+  // Counts the animals out loud, one hop at a time: "1, 2, 3 …"
+  function countAlong() {
+    const session = state.session;
+    const list = [...herd.querySelectorAll('.animal:not(.crossed)')];
+    herd.querySelectorAll('.badge').forEach(b => b.remove());
+    state.busy = true;
+    list.forEach((el, i) => setTimeout(() => {
+      if (session !== state.session) return;
+      el.classList.remove('counted'); void el.offsetWidth; el.classList.add('counted');
+      el.insertAdjacentHTML('beforeend', `<span class="badge">${i + 1}</span>`);
+      sfx.tap();
+      speak(String(i + 1));
+    }, i * 800));
+    setTimeout(() => { if (session === state.session) state.busy = false; }, list.length * 800);
+  }
+
+  function success() {
+    const session = state.session;
+    state.busy = true; state.phase = 'done';
+    pad.enable(false);
+    renderEq(true);
+    const total = Kit.addStars(STAR_KEY, LEVELS.length, state.level, 1);
+    starsEl.textContent = `⭐ ${total}`;
+    restart(starsEl, 'pop');
+    herd.querySelectorAll('.animal:not(.crossed)').forEach((el, i) => setTimeout(() => el.classList.add('counted'), i * 60));
+    Kit.celebrate({ text: L().yay, say: pick(L().cheers) });
+    setTimeout(() => { if (session === state.session) newRound(); }, 3200);
+  }
+
+  /* ---------- Screens ---------- */
+  function startLevel(i) {
+    state.level = i; Kit.store.set('mathe-beach-level', String(i));
+    state.session++; state.last = '';
+    $('start').classList.add('hide');
+    starsEl.textContent = `⭐ ${Kit.stars(STAR_KEY, LEVELS.length)[i]}`;
+    pad = Kit.numberPad($('pad'), 10, onPick);
+    state.playing = true;
+    sfx.ding();
+    newRound();
+  }
+  function showStart() {
+    state.playing = false; state.session++;
+    Kit.hush();
+    $('title').textContent = L().title;
+    document.title = L().title.replace('🐢 ', '');
+    Kit.levelTiles($('levels'), LEVELS, Kit.stars(STAR_KEY, LEVELS.length), state.level, startLevel);
+    $('start').classList.remove('hide');
+  }
+
+  $('homeBtn').addEventListener('click', showStart);
+  eqEl.addEventListener('click', () => { if (state.playing && state.phase !== 'done') tell(); });
+  sayEl.addEventListener('click', () => { if (state.playing && state.phase !== 'done') tell(); });
+  const onLang = () => { $('title').textContent = L().title; if (state.playing && state.phase !== 'done') tell(); };
+  Kit.bindLangButton($('langBtn'), onLang);
+  Kit.bindLangButton($('langBtn0'), () => { onLang(); showStart(); });
+  // Re-fit the animals whenever the sand changes size (rotation, window resize, pad wrapping).
+  if ('ResizeObserver' in window) new ResizeObserver(() => { if (state.round) sizeHerd(); }).observe(beach);
+  else addEventListener('resize', () => { if (state.round) sizeHerd(); });
+
+  showStart();
+})();
+</script>
+</body>
+</html>

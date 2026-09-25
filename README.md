@@ -1,10 +1,12 @@
 # Mathe
 
 Playful maths games for preschool kids. No worksheets, no "solve this": just jumping, sounds and confetti.
+Open `index.html` (the island map) and pick a game. Everything runs in the browser: double-click works, no install.
+Best on a tablet or phone. Questions are read aloud in English or German (tap 🇬🇧/🇩🇪 to switch).
 
-## 🏝️ Island Hopper
+## 🐸 Island Hopper: number line jumps
 
-Help a frog (or kangaroo, bunny, …) hop along a line of numbered islands to land on the glowing gold one.
+Hop along numbered islands to land on the glowing gold one.
 
 | Level | Jumps | Islands |
 |---|---|---|
@@ -13,9 +15,37 @@ Help a frog (or kangaroo, bunny, …) hop along a line of numbered islands to la
 | 🌋 3 | ±1, ±2, ±3 | 0–10 |
 | 🚀 4 | ±1, ±2, ±5 | 0–20 |
 
-- From level 2, each round has a ⚡ jump budget, so kids plan their route (e.g. +3 +3 +1). The budget tightens with a winning streak and loosens again after a miss.
-- Every hop leaves a labelled arc (+3, −2), so the whole route stays visible on the number line.
-- Reaching the island in the fewest possible jumps earns a double star.
-- The question is read aloud (English or German). Tap the banner to hear it again.
+From level 2, each round has a ⚡ jump budget, so kids plan their route (e.g. +3 +3 +1). Every hop leaves a labelled arc,
+and the fewest possible jumps earns a double star.
 
-**Play:** open `index.html` in any browser (double-click works, no install), or visit the GitHub Pages site once it's enabled. Best on a tablet or phone held sideways.
+## 🌋 Volcano Tower: number walls (Zahlenmauern)
+
+A number wall built as a volcano: every stone is the two stones below it added together. The "+" roof is the crater.
+Fill every stone and the volcano erupts.
+
+| Level | Wall | Numbers |
+|---|---|---|
+| 🪨 1 | 3 rows, bottom row given (adding only) | up to 10 |
+| 🌋 2 | 3 rows, mixed stones given (adding and taking away) | up to 10 |
+| 🔥 3 | 4 rows, mixed stones given | up to 20 |
+
+Every puzzle can be solved one stone at a time. 💡 (or two wrong tries) lights up the two stones that help and shows dots.
+
+## 🐢 Turtle Beach: picture sums
+
+Like crossing out pictures on a worksheet: tap animals to cross them out (take away) or tap the boat to bring more friends
+(add), then count and pick the answer.
+
+| Level | Sums | Numbers |
+|---|---|---|
+| 🐣 1 | one more / one less | up to 5 |
+| 🐢 2 | add or take away 1–3 | up to 10 |
+| 🦀 3 | missing number: 4 + ? = 6, 6 − ? = 4 | up to 10 |
+
+Two wrong answers make the animals count themselves out loud: 1, 2, 3 …
+
+## Files
+
+- `index.html`: island map
+- `island-hopper.html`, `volcano.html`, `beach.html`: the games
+- `kit.js`, `kit.css`: shared sound, voice, confetti, stars and number buttons
