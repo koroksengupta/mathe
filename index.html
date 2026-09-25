@@ -23,6 +23,21 @@
   .card .name{font-size:clamp(20px,2.8vw,34px);font-weight:700;}
   .card .sample{font-size:clamp(15px,2vw,24px);font-weight:700;color:#fff;background:var(--sea-deep);border-radius:12px;padding:0 10px;}
   .card .got{font-size:clamp(15px,2vw,22px);font-weight:700;opacity:.8;}
+  /* ---------- Buy me a coffee (parents only: lives on the map, not in the games) ---------- */
+  .coffee-btn{margin-top:1vh;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;background:rgba(255,255,255,.9);
+    border-radius:999px;padding:8px 18px;font-size:clamp(15px,1.8vw,20px);font-weight:700;color:var(--ink);box-shadow:0 4px 0 rgba(0,0,0,.12);}
+  .coffee-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.12);}
+  .coffee-backdrop{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(27,120,181,.6);}
+  .coffee-backdrop.show{display:flex;}
+  .coffee-modal{--surface:#FFFFFF;--accent-warm:var(--gold);background:#fff;border-radius:28px;padding:22px 22px 18px;max-width:360px;width:100%;
+    text-align:center;box-shadow:0 12px 0 rgba(0,0,0,.18);animation:kit-pop .4s ease;max-height:100%;overflow:auto;}
+  .coffee-modal h3{margin:0 0 6px;font-size:24px;}
+  .coffee-modal p{margin:0 0 14px;font-size:15px;color:#5B6478;line-height:1.35;font-family:system-ui,sans-serif;}
+  .coffee-qr{display:block;width:min(200px,60vw);margin:0 auto 14px;border-radius:20px;box-shadow:0 6px 16px rgba(0,0,0,.15);overflow:hidden;}
+  .coffee-qr svg{display:block;width:100%;height:auto;}
+  .coffee-cta{display:block;background:linear-gradient(180deg,#FFD66B,var(--gold));color:var(--ink);font-weight:700;font-size:18px;border-radius:16px;padding:12px;
+    box-shadow:0 5px 0 #C99A1E;}
+  .coffee-close{margin-top:12px;width:100%;border:none;background:#EEF2F7;border-radius:16px;padding:10px;font-size:16px;font-weight:700;color:#5B6478;cursor:pointer;}
   .top{position:fixed;top:12px;right:16px;z-index:5;}
   @media (orientation:portrait) and (max-width:700px){ .cards{grid-template-columns:1fr;max-width:340px;} }
 </style>
@@ -45,10 +60,27 @@
         <span class="sample">🐢🐢🐢 − 1</span><span class="got" id="s2"></span>
       </a>
     </nav>
+    <button class="coffee-btn" id="coffeeBtn"><span>☕</span><span id="coffeeCta"></span></button>
   </main>
+  <div class="coffee-backdrop" id="coffeeBackdrop" role="dialog" aria-modal="true" aria-labelledby="coffeeTitle">
+    <div class="coffee-modal">
+      <h3 id="coffeeTitle"></h3>
+      <p id="coffeeMsg"></p>
+      <a class="coffee-qr" id="coffeeQr" target="_blank" rel="noopener"></a>
+      <a class="coffee-cta" id="coffeeLink" target="_blank" rel="noopener"></a>
+      <button class="coffee-close" id="coffeeClose"></button>
+    </div>
+  </div>
 <script src="kit.js"></script>
 <script>
   const NAMES = { en: ['Volcano Tower', 'Turtle Beach'], de: ['Vulkan-Turm', 'Schildkröten-Strand'] };
+  const COFFEE_URL = 'https://buymeacoffee.com/tellkoroke';
+  // Same QR code as the ticktock app (points to COFFEE_URL).
+  const COFFEE_QR_SVG = '<svg viewBox="0 0 350 350" class="coffee-qr-svg" role="img" aria-label="QR code to Buy Me a Coffee page"><rect width="350" height="350" rx="18" fill="var(--surface)"/><rect x="30" y="30" width="70" height="70" rx="14" fill="var(--ink)"/><rect x="40" y="40" width="50" height="50" rx="10" fill="var(--surface)"/><rect x="50" y="50" width="30" height="30" rx="7" fill="var(--ink)"/><rect x="250" y="30" width="70" height="70" rx="14" fill="var(--ink)"/><rect x="260" y="40" width="50" height="50" rx="10" fill="var(--surface)"/><rect x="270" y="50" width="30" height="30" rx="7" fill="var(--ink)"/><rect x="30" y="250" width="70" height="70" rx="14" fill="var(--ink)"/><rect x="40" y="260" width="50" height="50" rx="10" fill="var(--surface)"/><rect x="50" y="270" width="30" height="30" rx="7" fill="var(--ink)"/><path d="M120 30h10v10h-10zM140 30h10v10h-10zM170 30h10v10h-10zM200 30h10v10h-10zM210 30h10v10h-10zM220 30h10v10h-10zM130 40h10v10h-10zM190 40h10v10h-10zM210 40h10v10h-10zM230 40h10v10h-10zM130 50h10v10h-10zM140 50h10v10h-10zM170 50h10v10h-10zM180 50h10v10h-10zM200 50h10v10h-10zM220 50h10v10h-10zM120 60h10v10h-10zM130 60h10v10h-10zM150 60h10v10h-10zM160 60h10v10h-10zM210 60h10v10h-10zM220 60h10v10h-10zM120 70h10v10h-10zM150 70h10v10h-10zM200 70h10v10h-10zM210 70h10v10h-10zM110 80h10v10h-10zM120 80h10v10h-10zM130 80h10v10h-10zM140 80h10v10h-10zM150 80h10v10h-10zM180 80h10v10h-10zM190 80h10v10h-10zM210 80h10v10h-10zM220 80h10v10h-10zM230 80h10v10h-10zM110 90h10v10h-10zM130 90h10v10h-10zM150 90h10v10h-10zM170 90h10v10h-10zM190 90h10v10h-10zM210 90h10v10h-10zM230 90h10v10h-10zM120 100h10v10h-10zM130 100h10v10h-10zM160 100h10v10h-10zM180 100h10v10h-10zM200 100h10v10h-10zM210 100h10v10h-10zM220 100h10v10h-10zM230 100h10v10h-10zM30 110h10v10h-10zM60 110h10v10h-10zM80 110h10v10h-10zM90 110h10v10h-10zM110 110h10v10h-10zM130 110h10v10h-10zM150 110h10v10h-10zM170 110h10v10h-10zM190 110h10v10h-10zM210 110h10v10h-10zM220 110h10v10h-10zM240 110h10v10h-10zM260 110h10v10h-10zM30 120h10v10h-10zM40 120h10v10h-10zM50 120h10v10h-10zM60 120h10v10h-10zM80 120h10v10h-10zM160 120h10v10h-10zM190 120h10v10h-10zM240 120h10v10h-10zM250 120h10v10h-10zM280 120h10v10h-10zM310 120h10v10h-10zM30 130h10v10h-10zM70 130h10v10h-10zM90 130h10v10h-10zM100 130h10v10h-10zM110 130h10v10h-10zM130 130h10v10h-10zM140 130h10v10h-10zM160 130h10v10h-10zM170 130h10v10h-10zM190 130h10v10h-10zM200 130h10v10h-10zM220 130h10v10h-10zM240 130h10v10h-10zM260 130h10v10h-10zM270 130h10v10h-10zM280 130h10v10h-10zM290 130h10v10h-10zM300 130h10v10h-10zM60 140h10v10h-10zM70 140h10v10h-10zM80 140h10v10h-10zM100 140h10v10h-10zM130 140h10v10h-10zM150 140h10v10h-10zM160 140h10v10h-10zM210 140h10v10h-10zM220 140h10v10h-10zM260 140h10v10h-10zM270 140h10v10h-10zM290 140h10v10h-10zM300 140h10v10h-10zM30 150h10v10h-10zM40 150h10v10h-10zM60 150h10v10h-10zM70 150h10v10h-10zM80 150h10v10h-10zM90 150h10v10h-10zM100 150h10v10h-10zM110 150h10v10h-10zM120 150h10v10h-10zM200 150h10v10h-10zM230 150h10v10h-10zM240 150h10v10h-10zM250 150h10v10h-10zM280 150h10v10h-10zM300 150h10v10h-10zM310 150h10v10h-10zM30 160h10v10h-10zM50 160h10v10h-10zM60 160h10v10h-10zM80 160h10v10h-10zM100 160h10v10h-10zM110 160h10v10h-10zM130 160h10v10h-10zM200 160h10v10h-10zM210 160h10v10h-10zM220 160h10v10h-10zM230 160h10v10h-10zM240 160h10v10h-10zM30 170h10v10h-10zM40 170h10v10h-10zM60 170h10v10h-10zM70 170h10v10h-10zM90 170h10v10h-10zM110 170h10v10h-10zM140 170h10v10h-10zM200 170h10v10h-10zM230 170h10v10h-10zM250 170h10v10h-10zM270 170h10v10h-10zM280 170h10v10h-10zM290 170h10v10h-10zM300 170h10v10h-10zM310 170h10v10h-10zM40 180h10v10h-10zM50 180h10v10h-10zM60 180h10v10h-10zM70 180h10v10h-10zM120 180h10v10h-10zM140 180h10v10h-10zM200 180h10v10h-10zM220 180h10v10h-10zM230 180h10v10h-10zM260 180h10v10h-10zM270 180h10v10h-10zM280 180h10v10h-10zM300 180h10v10h-10zM30 190h10v10h-10zM40 190h10v10h-10zM80 190h10v10h-10zM90 190h10v10h-10zM100 190h10v10h-10zM110 190h10v10h-10zM140 190h10v10h-10zM200 190h10v10h-10zM220 190h10v10h-10zM230 190h10v10h-10zM240 190h10v10h-10zM260 190h10v10h-10zM300 190h10v10h-10zM40 200h10v10h-10zM50 200h10v10h-10zM70 200h10v10h-10zM80 200h10v10h-10zM110 200h10v10h-10zM120 200h10v10h-10zM150 200h10v10h-10zM160 200h10v10h-10zM170 200h10v10h-10zM190 200h10v10h-10zM240 200h10v10h-10zM250 200h10v10h-10zM260 200h10v10h-10zM280 200h10v10h-10zM310 200h10v10h-10zM30 210h10v10h-10zM50 210h10v10h-10zM70 210h10v10h-10zM90 210h10v10h-10zM110 210h10v10h-10zM120 210h10v10h-10zM170 210h10v10h-10zM190 210h10v10h-10zM230 210h10v10h-10zM250 210h10v10h-10zM260 210h10v10h-10zM270 210h10v10h-10zM300 210h10v10h-10zM310 210h10v10h-10zM50 220h10v10h-10zM100 220h10v10h-10zM110 220h10v10h-10zM140 220h10v10h-10zM170 220h10v10h-10zM190 220h10v10h-10zM200 220h10v10h-10zM210 220h10v10h-10zM220 220h10v10h-10zM230 220h10v10h-10zM300 220h10v10h-10zM310 220h10v10h-10zM30 230h10v10h-10zM50 230h10v10h-10zM60 230h10v10h-10zM80 230h10v10h-10zM90 230h10v10h-10zM100 230h10v10h-10zM140 230h10v10h-10zM230 230h10v10h-10zM240 230h10v10h-10zM250 230h10v10h-10zM260 230h10v10h-10zM270 230h10v10h-10zM290 230h10v10h-10zM110 240h10v10h-10zM150 240h10v10h-10zM170 240h10v10h-10zM190 240h10v10h-10zM220 240h10v10h-10zM230 240h10v10h-10zM270 240h10v10h-10zM290 240h10v10h-10zM300 240h10v10h-10zM310 240h10v10h-10zM130 250h10v10h-10zM190 250h10v10h-10zM230 250h10v10h-10zM250 250h10v10h-10zM270 250h10v10h-10zM300 250h10v10h-10zM110 260h10v10h-10zM120 260h10v10h-10zM130 260h10v10h-10zM170 260h10v10h-10zM190 260h10v10h-10zM230 260h10v10h-10zM270 260h10v10h-10zM280 260h10v10h-10zM290 260h10v10h-10zM310 260h10v10h-10zM130 270h10v10h-10zM150 270h10v10h-10zM180 270h10v10h-10zM190 270h10v10h-10zM200 270h10v10h-10zM230 270h10v10h-10zM240 270h10v10h-10zM250 270h10v10h-10zM260 270h10v10h-10zM270 270h10v10h-10zM310 270h10v10h-10zM110 280h10v10h-10zM140 280h10v10h-10zM150 280h10v10h-10zM160 280h10v10h-10zM230 280h10v10h-10zM250 280h10v10h-10zM270 280h10v10h-10zM280 280h10v10h-10zM290 280h10v10h-10zM300 280h10v10h-10zM130 290h10v10h-10zM150 290h10v10h-10zM170 290h10v10h-10zM200 290h10v10h-10zM220 290h10v10h-10zM270 290h10v10h-10zM280 290h10v10h-10zM290 290h10v10h-10zM310 290h10v10h-10zM130 300h10v10h-10zM140 300h10v10h-10zM170 300h10v10h-10zM200 300h10v10h-10zM220 300h10v10h-10zM230 300h10v10h-10zM250 300h10v10h-10zM260 300h10v10h-10zM270 300h10v10h-10zM300 300h10v10h-10zM110 310h10v10h-10zM120 310h10v10h-10zM160 310h10v10h-10zM180 310h10v10h-10zM200 310h10v10h-10zM230 310h10v10h-10zM240 310h10v10h-10zM250 310h10v10h-10zM270 310h10v10h-10zM280 310h10v10h-10zM300 310h10v10h-10z" fill="var(--ink)"/><rect x="150" y="150" width="50" height="50" rx="11" fill="var(--accent-warm)"/><text x="175" y="180.5" text-anchor="middle" font-size="30">☕</text></svg>';
+  const COFFEE = {
+    en: { title: 'Enjoying Mathe Island?', msg: 'If these games helped your child with numbers, you can buy me a coffee – totally optional, always appreciated!', cta: 'Buy me a coffee', close: 'Maybe later' },
+    de: { title: 'Gefällt dir Mathe Island?', msg: 'Wenn diese Spiele deinem Kind beim Rechnen geholfen haben, kannst du mir gerne einen Kaffee spendieren – ganz freiwillig, aber immer eine Freude!', cta: 'Kaffee spendieren', close: 'Vielleicht später' }
+  };
   const sum = a => a.reduce((s, v) => s + (+v || 0), 0);
   function render() {
     const [v, b] = NAMES[Kit.lang];
@@ -57,7 +89,21 @@
     document.getElementById('s0').textContent = '⭐ ' + sum(Kit.store.json('ih-stars', []));
     document.getElementById('s1').textContent = '⭐ ' + sum(Kit.store.json('mathe-volcano-stars', []));
     document.getElementById('s2').textContent = '⭐ ' + sum(Kit.store.json('mathe-beach-stars', []));
+    const c = COFFEE[Kit.lang];
+    document.getElementById('coffeeCta').textContent = c.cta;
+    document.getElementById('coffeeTitle').textContent = c.title;
+    document.getElementById('coffeeMsg').textContent = c.msg;
+    document.getElementById('coffeeLink').textContent = '☕ ' + c.cta;
+    document.getElementById('coffeeClose').textContent = c.close;
   }
+  const backdrop = document.getElementById('coffeeBackdrop');
+  ['coffeeQr', 'coffeeLink'].forEach(id => { document.getElementById(id).href = COFFEE_URL; });
+  document.getElementById('coffeeQr').innerHTML = COFFEE_QR_SVG;
+  document.getElementById('coffeeQr').setAttribute('aria-label', 'Buy me a coffee');
+  document.getElementById('coffeeBtn').addEventListener('click', () => backdrop.classList.add('show'));
+  document.getElementById('coffeeClose').addEventListener('click', () => backdrop.classList.remove('show'));
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('show'); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('show'); });
   Kit.bindLangButton(document.getElementById('langBtn'), render);
   render();
   addEventListener('pageshow', render); // refresh stars when coming back with the browser's back button
