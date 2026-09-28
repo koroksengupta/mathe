@@ -194,9 +194,9 @@ mathe/
 ├── kit.js               # Shared helpers: storage, language, sound, voice, confetti, pad, levels
 ├── kit.css              # Shared look: sky & sea, pills, number bubbles, level tiles, celebrations
 ├── README.md
+├── LICENSE              # MIT
 └── .github/workflows/
-    ├── pages.yml        # Deploys the site to GitHub Pages on every push to main
-    └── blank.yml        # GitHub's sample CI workflow (prints "Hello, world"); safe to delete
+    └── pages.yml        # Deploys the site to GitHub Pages on every push to main
 ```
 
 It's plain HTML, CSS and JavaScript: **no framework, no build step, no dependencies.**
@@ -291,5 +291,5 @@ The same link, with a QR code, is on the island map.
 
 ## License
 
-No license has been chosen yet, so by default all rights are reserved by the author.
-If you'd like to reuse or adapt the games, please open an issue on the repository to ask.
+[MIT](LICENSE) © 2026 koroksengupta. You're welcome to use, adapt and share these games, for example in a classroom,
+as long as the copyright notice stays with them.
