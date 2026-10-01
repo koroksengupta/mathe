@@ -109,7 +109,7 @@ One island glows gold, and the banner asks *"Can you land on Island 7?"*. The ch
 ### 🌋 Volcano Tower
 
 A number wall (*Zahlenmauer*) built as a volcano. **Every stone is the two stones below it added together.**
-The **+** roof from the classic worksheet is the glowing crater. Fill every stone and the volcano rumbles and erupts.
+The roof from the classic worksheet is the glowing crater. Fill every stone and the volcano rumbles and erupts.
 
 | Level | Wall | Numbers | What's given |
 |---|---|---|---|
@@ -120,6 +120,12 @@ The **+** roof from the classic worksheet is the glowing crater. Fill every ston
 **How it works:**
 
 - Tap an empty stone, then tap a number bubble. The next stone that can be worked out is picked automatically, bottom-up like on paper.
+- **The crater shows the sum for the stone being filled.** A worksheet's fixed "+" roof makes children think they always add, but walls with stones missing at the bottom need taking away. So the crater shows:
+  - **green +** when the stone comes from the two stones below it (e.g. 5 + 2);
+  - **red −** when it comes from the stone above, so you take away the other stone below (e.g. 10 − 7);
+  - **grey ?** when the stone can't be worked out yet, with the banner suggesting another stone.
+
+  The sign flips with an animation, and the voice says *"Now take away!"* / *"Now add!"* whenever it switches. Level 1 always shows +.
 - **Every puzzle is fair.** It can always be solved one stone at a time, each from two known neighbours, so the child never has to guess.
 - **Help.** **💡**, or two wrong tries on the same stone, lights up the two helper stones, shows dots on them, and reads the sum aloud (*"6 minus 3"*).
 - **Rewards.** A wall with no mistakes and no hint earns a double star (**PERFECT!**).

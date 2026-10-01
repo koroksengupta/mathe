@@ -22,9 +22,14 @@
   .roof::before{content:"";position:absolute;inset:0;clip-path:polygon(50% 0,100% 100%,0 100%);
     background:linear-gradient(180deg,#FFD34D,#FF7A00 55%,#D62700);animation:lava 1.2s ease-in-out infinite alternate;}
   @keyframes lava{from{filter:brightness(1)}to{filter:brightness(1.25) saturate(1.2)}}
-  .roof .plus{position:relative;width:calc(var(--s)*.46);height:calc(var(--s)*.46);margin-bottom:calc(var(--s)*.06);border-radius:50%;
-    background:#fff;color:#D62700;font-weight:700;font-size:calc(var(--s)*.42);display:flex;align-items:center;justify-content:center;
+  /* The crater shows the sum needed for the selected stone: + (from the two below), − (from the stone above), ? (not yet). */
+  .roof .op{position:relative;width:calc(var(--s)*.5);height:calc(var(--s)*.5);margin-bottom:calc(var(--s)*.04);border-radius:50%;
+    background:#fff;color:var(--go-dark);font-weight:700;font-size:calc(var(--s)*.46);display:flex;align-items:center;justify-content:center;
     box-shadow:0 0 12px rgba(255,200,61,.9);line-height:1;}
+  .roof .op.minus{color:var(--stop-dark);box-shadow:0 0 0 3px var(--stop),0 0 14px rgba(242,71,74,.8);}
+  .roof .op.unknown{color:#8A93A6;}
+  .roof .op.flip{animation:opflip .45s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes opflip{from{transform:rotateY(90deg) scale(.5)}to{transform:none}}
   .smoke{position:absolute;left:50%;bottom:90%;width:calc(var(--s)*.3);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.75);
     animation:puff 3s ease-out infinite;pointer-events:none;}
   .smoke.s2{animation-delay:1s;}
@@ -112,6 +117,9 @@
     en: {
       title: '🌋 Volcano Tower',
       rule: 'Two stones below make the stone on top!',
+      ruleMinus: 'Take away! The stone on top minus its other stone below.',
+      wait: "This stone can't be worked out yet. Try another one!",
+      cuePlus: 'Now add!', cueMinus: 'Now take away!',
       next: 'A new volcano!',
       yay: 'BOOM! 🌋', perfect: 'PERFECT! 🌟',
       cheers: ['Boom! You did it!', 'Wow! What an eruption!', 'Super!'],
@@ -121,6 +129,9 @@
     de: {
       title: '🌋 Vulkan-Turm',
       rule: 'Zwei Steine unten ergeben den Stein oben!',
+      ruleMinus: 'Abziehen! Der Stein oben minus der andere Stein darunter.',
+      wait: 'Diesen Stein kann man noch nicht ausrechnen. Probier einen anderen!',
+      cuePlus: 'Jetzt zusammenzählen!', cueMinus: 'Jetzt abziehen!',
       next: 'Ein neuer Vulkan!',
       yay: 'BUMM! 🌋', perfect: 'PERFEKT! 🌟',
       cheers: ['Bumm! Geschafft!', 'Wow! Was für ein Ausbruch!', 'Super!'],
@@ -137,6 +148,7 @@
     level: Math.min(LEVELS.length - 1, +Kit.store.get('mathe-volcano-level', '0') || 0),
     sol: [], known: [], given: [], stones: [],
     sel: null, wrongs: {}, mistakes: 0, usedHint: false, hintFor: null, hintSay: '',
+    op: '+', cueOp: null,
     busy: false, playing: false, session: 0, rounds: 0, lastBottom: ''
   };
   const LV = () => LEVELS[state.level];
@@ -229,7 +241,7 @@
          <path d="M39.6,3 C39,7 40.2,10 39.4,15 M60.4,3 C61,6 59.8,9 60.6,12" stroke="#FF7A00" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>
          <path d="M0,100 C18,90 30,93 50,91 C70,93 82,90 100,100 Z" fill="#55C241"/>
        </svg>
-       <div class="roof"><span class="smoke"></span><span class="smoke s2"></span><span class="smoke s3"></span><span class="plus">+</span></div>`;
+       <div class="roof"><span class="smoke"></span><span class="smoke s2"></span><span class="smoke s3"></span><span class="op plus">+</span></div>`;
     state.stones = state.sol.map(row => row.map(() => null));
     for (let r = n - 1; r >= 0; r--) {
       const row = document.createElement('div'); row.className = 'row';
@@ -276,6 +288,24 @@
     state.stones.flat().forEach(b => b.classList.remove('sel', 'partner', 'show-dots'));
   }
 
+  // Which sum fills this stone right now: '+' from the two stones below it, '−' from the stone above
+  // (take away its other stone below), or '?' when no neighbours are known yet.
+  function opFor(r, i) {
+    const ops = deducible(state.known, LV().rows).filter(x => x.cell[0] === r && x.cell[1] === i).map(x => x.op);
+    return ops.includes('+') ? '+' : ops.includes('−') ? '−' : '?';
+  }
+  const bannerFor = op => op === '−' ? L().ruleMinus : op === '?' ? L().wait : L().rule;
+
+  function setOp(op) {
+    const el = wallbox.querySelector('.roof .op');
+    if (el && el.textContent !== op) {
+      el.textContent = op;
+      el.className = 'op ' + (op === '+' ? 'plus' : op === '−' ? 'minus' : 'unknown');
+      restart(el, 'flip');
+    }
+    state.op = op;
+  }
+
   function select(r, i, byTap) {
     if (!state.playing || state.busy) return;
     if (state.known[r][i]) { if (byTap) { sfx.tap(); restart(state.stones[r][i], 'pop'); } return; }
@@ -284,9 +314,14 @@
     state.stones[r][i].classList.add('sel');
     pad.clearMarks();
     (state.wrongs[key(r, i)] || []).forEach(n => pad.markWrong(n));
+    const op = opFor(r, i);
+    setOp(op);
     if (state.hintFor === key(r, i)) showHint(false);
-    else bannerText.textContent = L().rule;
+    else bannerText.textContent = bannerFor(op);
     if (byTap) sfx.tap();
+    // Say it out loud when the sum switches between adding and taking away (the wall's first cue is said in newWall).
+    if (op === '?') { if (byTap) speak(L().wait); }
+    else if (state.cueOp !== null && op !== state.cueOp) { state.cueOp = op; speak(op === '−' ? L().cueMinus : L().cuePlus); }
   }
 
   function selectNext() {
@@ -305,7 +340,8 @@
     if (!state.sel) return;
     const n = LV().rows;
     const d = deducible(state.known, n);
-    let h = d.find(x => x.cell[0] === state.sel[0] && x.cell[1] === state.sel[1]);
+    // Same preference as the crater: adding first, so the hint never contradicts the sign on the volcano.
+    let h = d.filter(x => x.cell[0] === state.sel[0] && x.cell[1] === state.sel[1]).sort((x, y) => (x.op === '+' ? 0 : 1) - (y.op === '+' ? 0 : 1))[0];
     if (!h) { h = d[0]; if (!h) return; select(h.cell[0], h.cell[1]); }
     state.hintFor = key(h.cell[0], h.cell[1]);
     state.usedHint = true;
@@ -329,7 +365,7 @@
       renderStones();
       restart(stone, 'pop');
       if (state.known.every(row => row.every(Boolean))) finish();
-      else { bannerText.textContent = L().rule; setTimeout(() => { if (state.playing && !state.busy) selectNext(); }, 250); }
+      else setTimeout(() => { if (state.playing && !state.busy) selectNext(); }, 250);
     } else {
       const k = key(r, i);
       (state.wrongs[k] = state.wrongs[k] || []).push(n);
@@ -345,6 +381,8 @@
     const session = state.session;
     state.busy = true;
     const perfect = state.mistakes === 0 && !state.usedHint;
+    setOp('+');
+    bannerText.textContent = L().rule;
     const total = Kit.addStars(STAR_KEY, LEVELS.length, state.level, perfect ? 2 : 1);
     starsEl.textContent = `⭐ ${total}`;
     restart(starsEl, 'pop');
@@ -384,9 +422,12 @@
     generate();
     build();
     pad.clearMarks();
-    bannerText.textContent = L().rule;
-    speak(state.rounds++ === 0 ? L().rule : L().next);
+    state.op = '+'; state.cueOp = null;
     selectNext();
+    // Intro line, plus the cue when this wall starts with taking away.
+    state.cueOp = state.op === '?' ? '+' : state.op;
+    const intro = state.rounds++ === 0 ? L().rule : L().next;
+    speak(state.op === '−' ? `${intro} ${L().cueMinus}` : intro);
   }
 
   /* ---------- Screens ---------- */
@@ -419,10 +460,10 @@
 
   $('homeBtn').addEventListener('click', showStart);
   $('hintBtn').addEventListener('click', () => { Kit.audio(); if (state.playing && !state.busy) showHint(true); });
-  $('banner').addEventListener('click', () => { if (state.playing) speak(state.hintFor ? state.hintSay : L().rule); });
+  $('banner').addEventListener('click', () => { if (state.playing) speak(state.hintFor ? state.hintSay : bannerFor(state.op)); });
   const onLang = () => {
     $('title').textContent = L().title;
-    if (state.playing && !state.hintFor) bannerText.textContent = L().rule;
+    if (state.playing && !state.hintFor) bannerText.textContent = bannerFor(state.op);
   };
   Kit.bindLangButton($('langBtn'), () => { onLang(); if (!state.playing) showStart(); });
   addEventListener('resize', () => { if (state.stones.length) layout(); });
